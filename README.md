@@ -20,5 +20,5 @@ $ export SLACK_TOKEN=your_slack_token
 Run bot with:
 
 ```bash
-$ python run.py [args]
+$ python run.py
 ```
