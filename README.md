@@ -15,6 +15,7 @@ Store your slack token in an environment variable like so:
 
 ```bash
 $ export SLACK_TOKEN=your_slack_token
+$ export VOTEBOT_CONFIG_MODE=your_config_mode # Options are: dev, deploy, test
 ```
 
 Run bot with:
