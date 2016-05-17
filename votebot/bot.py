@@ -20,6 +20,7 @@ from slackclient import SlackClient
 from redis_cache import SimpleCache
 
 # local imports
+from wrappers import Instruction, Vote
 from commands import cmds
 from parser import ArgsParser
 import utils
@@ -46,22 +47,22 @@ class VoteBot(SlackClient):
         self.userid = self.get_userid(self.username)
         self.db = models
         self.chn_msgs_cache = SimpleCache(10, expire=self.config.CACHE_EXPIRY)
+        self.postts_candidate_cache = SimpleCache(30, expire=self.config.CACHE_EXPIRY)
 
         try:
-            print 'Preparing database...' #DEBUG
+            print 'Connecting to database...' #DEBUG
             self.connect_db()
-            print 'Database ready!' #DEBUG
+            print 'Connected to database!!' #DEBUG
         except:
-            print 'Database connection/initialization failed!\nExiting...'
+            print 'Database connection failed!\nExiting...'
             sys.exit(1)
 
-        self.load_all_members()
-        self.load_data()
         self.connect_rtm()
-    
+        self.join_voting_channels()
 
+    # Synchronize needed Slack data with DB
     def sync_slack_members_with_db_profiles(self):
-        if not team_members:
+        if not self.team_members:
             self.load_all_members()
 
         # Find any new Slack team member
@@ -75,18 +76,25 @@ class VoteBot(SlackClient):
                         title=member.get('profile').get('title'),
                     )
                 )
+        # MARK TODO: Fix this
         # Find any DB `Profile` whose Slack account
         # has been deleted and delete their DB profile
-        for profile in self.db.session.query(self.db.Profile).all():
-            members.get(profile.userid) is None:
-            self.db.session.delete(profile)
+        # for profile in self.db.session.query(self.db.Profile).all():
+        #     if self.team_members.get(profile.userid) is None:
+        #         self.db.session.delete(profile)
 
         # save all changes
         try:
-            session.commit()
+            self.db.session.commit()
         except:
             print 'Failed to commit DB transactions' #DEBUG
-            session.rollback()
+            self.db.session.rollback()
+
+    # Load all Slack members' info into memory
+    def load_all_members(self):
+        if not self.team_members:
+            response = self.api_call('users.list')
+            self.team_members = response.get('members')
     
     def load_stats(self):
         self.stats = dict()
@@ -98,48 +106,65 @@ class VoteBot(SlackClient):
                 'live_ts' : office.live_ts,
                 'log_ts' : office.log_ts,
                 'candidates' : {
-                    x.candidate.userid : {'post_ts' : x.post_ts} for x in office.candidacies
+                    x.candidate.userid : {
+                        'post_ts' : x.post_ts,
+                        'votes_count' : (x.votes)
+                    } for x in office.candidacies
                 }
             }
 
+    # Do initial data loading
+    def load_data(self):
+        self.sync_slack_members_with_db_profiles()
+        self.load_stats()
+        #self.load_all_members()
+
+    # Setup database for first time use
     def setup_db(self):
-        self.db.initdb(self.config.DATABASE_URL)
-        populate_db()
-        session.commit()
+        import subprocess
 
         def populate_db():
             # Save basic of Slack team members to DB profiles
+            print 'Starting sync' # DEBUG
             self.sync_slack_members_with_db_profiles()
+            print 'Done syncing!' # DEBUG
             # Save stats elections and offices in DB
             for key, value in self.stats.iteritems():
                 self.db.session.add(
                     self.db.Office(
-                            name=value.get(office),
+                            name=value.get('office'),
                             channel=key,
-                            topic=value.get(topic),
-                            purpose=value.get(purpose),
+                            topic=value.get('topic'),
+                            purpose=value.get('purpose'),
                             log_ts='', # to be assigned when log is created
                             live_ts='' # to be assigned when live msg is created
                     )
                 )
 
+        print 'Preparing database...' #DEBUG
+        db_filename = self.config.DATABASE_URL[self.config.DATABASE_URL.rfind('/')+1:]
+        subprocess.call(['rm', db_filename])
+        self.connect_db()
+        print 'Database ready!' #DEBUG
 
+        populate_db()
+        self.db.session.commit()
+
+        
+
+    # Create and initialize database
     def connect_db(self):
-        models.initdb(self.config.DATABASE_URL)
+        self.db.initdb(self.config.DATABASE_URL)
 
+    # Connect to Slack's RTM API
     def connect_rtm(self):
-        # Make bot connect to the RTM API
         if self.rtm_connect():
-            print 'Votebot connected! Listening...'
+            print 'Votebot connected!' #DEBUG
         else:
-            print 'Votebot failed to connect!'
-
-    def load_data(self):
-        users = self.db.session.query(self.db.Profile).all()
-        print users
-
-    def listen(self):
-        # Make bot join voting channels
+            print 'Votebot failed to connect!' #DEBUG
+    
+    # Make bot join voting channels
+    def join_voting_channels(self):
         for channel in self.voting_channels:
             self.server.join_channel(channel)
             channel_info = self.api_call('channels.info', channel=channel)
@@ -152,17 +177,29 @@ class VoteBot(SlackClient):
             except:
                 print 'Error joining channel: {}'.format(channel) #DEBUG
 
-        # Begin listening for JSON formatted RTM API messages/events
+    # Begin listening for JSON formatted RTM API messages/events
+    def listen(self):
+        print 'Votebot Listening...' #DEBUG
         while True:
             for event in self.rtm_read():
-                # do something with RTM API message/event
-                print event
+                # do something with RTM API event
+                print event # DEBUG
 
-                if event.get('type') == 'message':
-                    if event.channel in self.voting_channels and \
-                        event.user in self.masters.values():
-                        bot.parser.parse_msg(message)
-
+                if event.get('channel') in self.voting_channels:
+                    if event.get('type') == 'message':
+                        if event.user in self.masters.values():
+                            bot.parser.parse_msg(message)
+                        else:
+                            self.delete_msg(event.get('channel'), event.get('ts'))
+                    elif event.get('type') == 'reaction_added' and \
+                        event.get('reaction') == self.vote_symbol:
+                        vote = Vote(
+                            voter_userid=event.get('user'),
+                            candidate_userid=self.get_candidate_from_post_ts(event.get('item').get('ts')),
+                            channel=event.get('item').get('channel')
+                        )
+                        if self.validate_vote(vote):
+                            save_vote(vote)
 
                 # if message.get('text') == 'stat':
                 #     tak = self.masters.get('acetakwas')
@@ -174,8 +211,36 @@ class VoteBot(SlackClient):
                 # # if message.get('user') == self.masters.get('acetakwas'):
                 #     response = self.delete_msg(
                 #         message.get('channel'), message.get('ts')
-                #     )                            
+                #     )
+
+    # Parse vote object and save data to DB
+    def save_vote(self, vote_obj):
+        voter_profile = self.db.session.query(self.db.Profile).filter_by(userid=vote_obj.voter_userid).first()
+        office_voted = self.db.session.query(self.db.Office).filter_by(channel=vote_obj.channel).first()
+        candidate_voted = self.db.session.query(self.db.Profile).filter_by(userid=vote_obj.candidate_userid).first()
+        candidacy = self.db.session.query(self.db.Candidacy).filter_by(office_id=office_voted.id, candidate_id=candidate_voted.id).first()
+        self.db.session.add(
+            Vote(
+                voter_id=voter_profile.id,
+                candidacy_id=candidacy.id
+            )
+        )
+        self.stats.get(vote_obj.channel).get('candidates').get(vote_obj.voter_userid)['votes_count'] += 1
+        self.db.session.commit()
+        print "Vote saved!" # DEBUG
     
+    def get_candidate_from_post_ts(self, channel, post_ts):
+        candidate_userid = postts_candidate_cache.get(post_ts)
+        if candidate_userid is None:
+            candidates = self.stats.get(channel).get('candidates')
+            for candidate, value in candidates.iteritems:
+                if value.get('post_ts') == post_ts:
+                    postts_candidate_cache.set(post_ts, candidate)
+                    candidate_userid = candidate
+                    break
+        return candidate_userid
+
+    # MARK
     def save_candidates(self, names, channel_id):
         candidate_names = [self.parse_mention(x.strip()) for x in names.split(',')]
         for name in candidate_names:
@@ -184,26 +249,26 @@ class VoteBot(SlackClient):
                 self.stats.get(channel).get('candidates')[name] = \
                     Candidate(userid, self.get_userbio(userid))
 
-    def validate_vote(self, voter_obj):
-        profile = self.db.session.query(self.db.Profile).filter_by(userid=voter_obj.voter_userid).first()
+    # Validate a `Vote` object
+    # Check against double voting
+    def validate_vote(self, vote_obj):
+        profile = self.db.session.query(self.db.Profile).filter_by(userid=vote_obj.voter_userid).first()
         prev_votes = self.db.session.query(self.db.Vote).filter_by(voter_id=profile.id).all()
         for vote in prev_votes:
-            if vote.candidacy.office.channel==voter_obj.channel
+            if vote.candidacy.office.channel==vote_obj.channel:
                 return False
         return True
 
-    def load_all_members(self):
-        if not self.team_members:
-            response = self.api_call('users.list')
-            self.team_members = response.get('members')
-
+    # Gets the Slack userid of member with `username`
     def get_userid(self, username):
         userid = None        
         for member in self.team_members:
             if member.get('name')==username:
                 userid = member.get('id')
+                break
         return userid
 
+    # MARK
     def get_userbio(self, userid):
         bio = textwrap.dedent(
             '''
@@ -220,16 +285,57 @@ class VoteBot(SlackClient):
         )
         return bio
 
+    # MARK    
     def get_user(self, userid):
         response = self.api_call('users.info', user=userid)
         return response.get('user')
 
+    # Format userid into a mention
     def format_user_mention(self, userid):
         return '<@{userid}>'.format(userid=userid)
 
+    # Extract userid from a mention
     def parse_user_mention(self, mention):
         return mention.strip('<@>')
 
+    # Post `text` as message to channel with `channel_name_or_id`
+    def post_msg(self, text, channel_name_or_id):
+        response = self.api_call('chat.postMessage',
+            text=text,
+            channel=channel_name_or_id,
+            as_user=True # `True`, so it makes sure to post using the bot's authed identity
+        )
+        return response
+
+    # Updates message with given timestamp (`msg_ts`) in `channel`
+    # Accepts a callback (`callback`) that contains instructions
+    # for processing the old text and generating the desired
+    # new text for updating the message
+    def edit_msg(self, channel, msg_ts, callback):
+        prev_text, new_text = self.get_message(channel, msg_ts), ''
+        if prev_text is not None:
+            new_text = callback(prev_text)
+        return self.api_call('chats.update',
+            text=new_text,
+            channel=channel,
+            as_user=True
+        )
+
+    # Appends `text` to a message with given timestamp (`msg_ts`)
+    # in `channel` using a delimiter (`delimiter`)
+    # def append_msg(self, text, channel, msg_ts, delimiter='\n'):
+    #     return self.edit_msg(
+    #         channel, msg_ts, callback=lambda x:'{x}{del}{txt}'.format(x=x, del=delimiter, txt=text)
+    #     )
+
+    # Appends a log message (`text`) to a channel's (`channel`)
+    # log message
+    def log_msg(self, text, channel):
+        msg_ts = self.stats.get(channel).get('log_ts')
+        delimiter = '\n{}\n'.format(time.time())
+        return self.append(text, channel, msg_ts, delimiter)
+
+    # Adds a user's profile (as candidate) to the channel given
     def add_candidate(self, userid, channel_name_or_id):
         user = self.get_user(userid)
         self.post_msg(
@@ -248,31 +354,8 @@ class VoteBot(SlackClient):
             channel_name_or_id=channel_name_or_id
         )
 
-    def post_msg(self, msg, channel_name_or_id):
-        response = self.api_call('chat.postMessage',
-            text=msg,
-            channel=channel_name_or_id,
-            as_user=True # `True`, so it makes sure to post using the bot's authed identity
-        )
-        return response
-
-    def edit_msg(self, channel, msg_ts, callback):
-        prev_text, new_text = self.get_message(channel, msg_ts), ''
-        if prev_text is not None:
-            new_text = callback(prev_text)
-        return self.api_call('chats.update', channel=channel, text=new_text)
-
-    def append_msg(self, msg, channel, msg_ts, delimiter='\n'):
-        return self.edit_msg(
-            channel, msg_ts, callback=lambda x:return x + delimiter + msg
-        )
-
-    def log_msg(self, msg, channel):
-        msg_ts = self.stats.get(channel).get('log_ts')
-        delimiter = '\n{}\n'.format(time.time())
-        return self.append(msg, channel, msg_ts, delimiter)
-
-    # load all messages from a channel; uses a cache
+    # load all messages from channel with `channel_name_or_id`;
+    # uses a cache
     def get_messages(self, channel_name_or_id):
         messages = self.chn_msgs_cache.get(channel_name_or_id)
         if messages is None:
@@ -283,6 +366,7 @@ class VoteBot(SlackClient):
             self.chn_msgs_cache.store(channel_name_or_id, messages)
         return messages
 
+    # MARK
     def get_stats(self, channel_name_or_id):
         messages = self.get_messages(channel_name_or_id)
         candidates_profiles = []
@@ -303,14 +387,14 @@ class VoteBot(SlackClient):
                     )
         return stat_report
 
-    def vote_for(userid, office):
-        try:
-            channel = self.config.OFFICES.get(office.lower()).get('channel')
-        except:
-            return
-
-        #self.api_call('reaction.add', ts)
-
+    # Vote for user (candidate) with id `userid` in voting channel
+    # with `channel_name_or_id` by adding a checkmark to their
+    # listed profile
+    def vote_for(userid, channel_name_or_id):
+        msg_ts = self.stats.get(channel).get('candidates').get(userid).get('post_ts')
+        self.api_call('reactions.add', name=self.vote_symbol, channel=channel_name_or_id, timestamp=msg_ts)
+    
+    # Delete message with timestamp `msg_ts` from `channel`
     def delete_msg(self, channel_name_or_id, msg_ts):
         response = self.server.api_requester.do(
             self.admin_token,
@@ -318,64 +402,3 @@ class VoteBot(SlackClient):
             dict(channel=channel_name_or_id, ts=msg_ts)
         )
         return json.loads(response.text)
-
-    def privmsg(self, user, channel, msg):
-            """
-            This will get called when the bot receives a message.
-
-            :param user: absolute ID of user who sent the message. A typical
-                        ID would look like this: sawkat!~sawkat@100.110.120.6
-            :param channel: channel where the message was sent. The `channel`
-                            is a channel if the message was sent in a
-                            channel. The `channel` is the bot's nick if the
-                            message
-
-                            was sent as a private message
-            :param msg: the message string that was sent
-            """
-            # Get nick of message sender
-            user = user.split('!', 1)[0]
-
-            user_is_admin = user in self.masters
-
-            # Is this a private message to me?
-            if channel == self.nickname:
-                room = user
-                response = self.parser.parse_msg(msg, sender=user)
-            # Or is this a message directed at me from a channel?
-            elif msg.startswith(self.nickname):
-                room = channel
-                # remove the nick and parse the message
-                response = self.parser.parse_msg(msg[msg.find(' ')+1:], sender=user)
-
-            # Process a response if allowed to talk
-            if not self.stealth:
-                msg = ''
-                for line in response.get_response():
-                    msg += line+'\n'
-
-                if response.is_general:
-                    if response.channel is not None:
-                        self.msg_channel(response.channel, msg)
-                elif room == user or (room == channel and response.is_private):
-                    self.msg_user(user, msg)
-                elif room == channel and not response.is_private:
-                    self.msg_user_in_channel(channel, user, msg)
-
-
-# Object to wrap received commands
-class Instruction(object):
-
-    def __init__(self, sender_userid, msg, channel):
-        self.sender_userid = sender_userid
-        self.msg = msg
-        self.channel = channel
-
-
-# Object to wrap received voting data
-class Vote(object):
-
-    def __init__(self, voter_userid, candidate_userid, channel):
-        self.voter_userid = voter_userid
-        self.candidate_userid = candidate_userid
-        self.channel = channel

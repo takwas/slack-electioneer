@@ -44,6 +44,9 @@ if __name__ == '__main__':
     # Do we need to setup DB for first time use?
     if len(args) > 1 and args[1] == 'setup':
         votebot.setup_db()
+        #votebot.load_data()
+    else:
+        votebot.load_data()
 
     # Connect to RTM API and begin listening for events
     votebot.listen()
