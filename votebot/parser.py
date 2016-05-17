@@ -37,7 +37,7 @@ class ArgsParser(object):
         """
         # strip message of leading and trailing whitespace chars
         try:
-            msg = strmsg.strip()
+            msg = msg.strip()
         except AttributeError:
             msg = ''
         msg = msg +' '
@@ -54,7 +54,7 @@ class ArgsParser(object):
                     return cmds.get(cmd).execute(bot=self.bot, msg=msg[cmd_width:].strip(), **kwargs)
                 except AttributeError:
                     pass
-            elif bot.waiting:
+            elif self.bot.waiting:
                 if msg.startswith(':names'):
                     bot.save_candidates(msg.split(':names')[1].strip())
             

@@ -76,18 +76,27 @@ class TestConfig(Config):
     BOT_NAME = 'sawkat'
     STATS = {
         'C195MMLKU': {
-            'office': 'test',
+            'office': 'Test Office',
             'topic': 'Vote System Testing Channel',
             'purpose': 'Pre-election testing.',
             'candidates': {
                 'U0NAKE0TT' :  {
                     'post_ts' : '',
                     'votes_count' : 0
-                }
+                },
+                'U0NA6G39N' :  {
+                    'post_ts' : '',
+                    'votes_count' : 0
+                },
+                'U0NAZ4CRL' :  {
+                    'post_ts' : '',
+                    'votes_count' : 0
+                },
             }
         }
     }
     DATABASE_URL = 'sqlite:///votebot_test_data.sqlite'
+    MODE = 'testing'
 
     def __repr__(self):
         return running_mode.format(mode='testing')

@@ -127,26 +127,66 @@ def do_help(bot, msg=None, **kwargs):
                 "a list of commands.".format(cmd=msg)
                 )
 
+
 def do_about(bot, msg, **kwargs):
     """
     Return some 'about' information about the receiving bot.
     """
-
     return Response(bot.about)
+
 
 def do_initiate(bot, msg, **kwargs):
     """
-    Return some 'about' information about the receiving bot.
+    Set channel up for an election
     """
-    #get_names()
-    #names = bot.masters.get('acetakwas'); #DEBUG
     channel = kwargs.get('event').get('channel')
+    instructions = textwrap.dedent(
+        '''
+        :cop:My name is *{name}*.
+        I am your election police, and I can only take instructions from my admins.
+
+        :sleuth_or_spy:My admins are: *{admins}*
+
+        
+        :grey_question:*How to Vote:*
+        Voting in here is simple. The candidates' profiles are listed with a green-white checkmark beneath their profiles. All you have to do is click the checkmark once for your preferred candidate.
+
+        :warning:*Rules*:
+        1. *Only your first vote counts*. Subsequent votes or attemps to remove already cast ballots would be ignored.
+
+        2. *Do not try to post any messages in this channel* as such messages would be deleted immediately.
+
+        Now...
+        > _Be Nice, Be Respectful, Be Civil_ :)
+
+
+        I will now list the candidates. Happy Voting :simple_smile:
+
+        '''.format(
+            name=bot.username,
+            admins=', '.join([bot.format_user_mention(x) for x in bot.masters.values()])
+        )
+    )
+    
+    # Clear channel
+    bot.clear_channel(channel)
+    # Set channel topic
+    bot.set_channel_topic(bot.stats.get(channel).get('topic'), channel)
+    # Show instructions
+    instruction_response = bot.post_msg(text=instructions, channel_name_or_id=channel)
+    # Set channel purpose
+    bot.set_channel_purpose(bot.stats.get(channel).get('purpose'), channel)
+    # Pin message to channel
+    bot.pin_msg_to_channel(channel, instruction_response.get('ts'))
+
+    # Add candidates for this office
     for userid, data in bot.stats.get(channel).get('candidates').iteritems():
         bot.add_candidate(userid, channel)
-    
-    #bot.api_call('channels.setTopic', )
-    bot.post_msg(text='Who are the candidates', channel_name_or_id=channel)
-    return Response(bot.about)
+        bot.vote_for(userid, channel)
+
+    return True
+    #return Response(bot.about)
+
 
 def do_link(bot, msg, **kwargs):
     """
@@ -188,6 +228,7 @@ def do_link(bot, msg, **kwargs):
 #                         filename="some_filename"))
 #     return response
 
+
 def do_masters(bot, msg, **kwargs):
     """
     Return the IRC nicks of those who currently have admin priviledges over
@@ -195,6 +236,7 @@ def do_masters(bot, msg, **kwargs):
     """
     response = Response('Bosses: ['+';'.join(bot.masters)+']')
     return response
+
 
 def do_override(bot, msg, **kwargs):
     """
