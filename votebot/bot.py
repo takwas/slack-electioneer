@@ -199,10 +199,11 @@ class VoteBot(SlackClient):
 
                 if event.get('channel') in self.voting_channels:
                     if event.get('type') == 'message':
-                        if event.get('user') in self.masters.values() \
-                            or event.get('user')==self.userid:
+                        if event.get('user') in self.masters.values():
                             self.parser.parse_msg(msg=event.get('text'), event=event)
                         else:
+                            if event.get('user') != self.userid:
+                                print 'USWEEERRR %' %event.get('user')
                             self.delete_msg(event.get('channel'), event.get('ts'))
                     elif event.get('type') == 'reaction_added' and \
                         event.get('reaction') == self.vote_symbol:
