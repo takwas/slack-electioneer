@@ -9,6 +9,9 @@
     :copyright: (c) 2016 by acetakwas
     :license: see LICENSE for details.
 """
+# local imports
+from utils import cmds, is_valid_cmd
+from actions import Response
 
 
 class ArgsParser(object):
@@ -43,27 +46,13 @@ class ArgsParser(object):
             cmd_width = msg.find(' ')
             cmd = msg[1:cmd_width]
 
-            from utils import is_valid_cmd
-
             if is_valid_cmd(cmd):
-                from commands import cmds
                 try:
                     return cmds.get(cmd).callback(bot=self.bot, msg=msg[cmd_width:].strip(), **kwargs)
                 except AttributeError:
                     pass
+            elif bot.waiting:
+                if msg.startswith(':names'):
+                    bot.save_candidates(msg.split(':names')[1].strip())
             
-            from actions import Response
             return Response("Invalid command!. Type ':help' for help")
-
-    # def parse_msg_cmd(self, msg):
-    #     msg = msg.strip()
-    #     pass
-
-    # def parse_msg_args(self, msg):
-    #     msg = msg.strip()
-    #     cmd_width = msg.find(' ')
-
-    #     while True:
-    #         cmd_width = msg[cmd_width:].find(' ')
-    #         #if cmd_width
-    #     pass

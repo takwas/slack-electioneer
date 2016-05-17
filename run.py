@@ -10,13 +10,13 @@
     :license: see LICENSE for details.
 """
 # standard library imports
-import os
+import os, sys
 
 # local imports
 from votebot import create_votebot, config as conf
 
 # Get running mode configuration from envvar or use default mode
-config_mode = os.getenv('VOTEBOT_CONFIG_MODE', None)
+config_mode = 'test'#os.getenv('VOTEBOT_CONFIG_MODE', None)
 if config_mode is None or config_mode not in ('dev', 'deploy', 'test'):
     print 'Value of environment variable: `VOTEBOT_CONFIG_MODE` not found or invalid!'
     print 'Using default configuration mode...'
@@ -30,9 +30,20 @@ if token is None:
     print 'Terminating...'
     sys.exit(1)
 
+admin_token = config.ADMIN_TOKEN
+if admin_token is None:
+    print 'Admin token not provided, bot will not perform delete operations.'
+
 
 if __name__ == '__main__':
     print 'Votebot running...'
     
+    args = sys.argv
     votebot = create_votebot(config)
+
+    # Do we need to setup DB for first time use?
+    if len(args) > 1 and args[1] == 'setup':
+        votebot.setup_db()
+
+    # Connect to RTM API and begin listening for events
     votebot.listen()

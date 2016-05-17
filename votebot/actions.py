@@ -134,6 +134,13 @@ def do_about(bot, msg, **kwargs):
 
     return Response(bot.about)
 
+def do_initiate(bot, msg, **kwargs):
+    """
+    Return some 'about' information about the receiving bot.
+    """
+    #bot.api_call('channels.setTopic', )
+    return Response(bot.about)
+
 def do_link(bot, msg, **kwargs):
     """
     Returns the URL to the webpage of the user whose nick is contained

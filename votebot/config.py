@@ -23,9 +23,12 @@ class Config:
     import os
     import textwrap
 
-    TOKEN = os.getenv('SLACK_TOKEN', None)
+
+    TOKEN = os.getenv('VOTEBOT_TOKEN', None)
+    ADMIN_TOKEN = os.getenv('VOTEBOT_ADMIN_TOKEN', None)
     CMD_DELIMITER = ':'
     NICK_SUFFIX = ':'
+    CACHE_EXPIRY = 60 * 10 # 10 minutes
     # Nicks of users who have control over a bot
     BOT_ADMINS = {
         'insaida': 'U0NA6G39N',
@@ -33,6 +36,7 @@ class Config:
         'aishab': 'U0NE07PMJ',
         'acetakwas': 'U0NAKE0TT',
     }
+    VOTE_SYMBOL = 'white_check_mark'
     SOURCE_URL = 'https://github.com/takwas/pyung-slack-votebot'
     ABOUT = textwrap.dedent(
                         """
@@ -43,16 +47,23 @@ class Config:
                         Source: {source_url}
                         """.format(source_url=SOURCE_URL)
                         )
-    
-    
+
 
 
 # Configuration used during
 # the development of our bot
 class DevConfig(Config):
 
-    NICKNAME = 'sawkat'
-    #DEFAULT_CHANNELS = ('#bot-test', )
+    BOT_NAME = 'sawkat'
+    STATS = {
+        'C179BGHMY': {
+            'office': 'test',
+            'topic': 'Bot-Dev Testing Channel',
+            'purpose': 'Test bots as you develop them.',
+            'candidates': {}
+        }
+    }
+    DATABASE_URL = 'sqlite:///votebot_dev_data.sqlite'
 
     def __repr__(self):
         return running_mode.format(mode='development')
@@ -62,8 +73,16 @@ class DevConfig(Config):
 # of our bot
 class TestConfig(Config):
 
-    NICKNAME = 'sawkat'
-    #DEFAULT_CHANNELS = ('#bot-test', )
+    BOT_NAME = 'sawkat'
+    STATS = {
+        'C195MMLKU': {
+            'office': 'test',
+            'topic': 'Vote System Testing Channel',
+            'purpose': 'Pre-election testing.',
+            'candidates': {}
+        }
+    }
+    DATABASE_URL = 'sqlite:///votebot_test_data.sqlite'
 
     def __repr__(self):
         return running_mode.format(mode='testing')
@@ -72,8 +91,28 @@ class TestConfig(Config):
 # Main configuration for when our bot is deployed on a server
 class DeployConfig(Config):
 
-    NICKNAME = 'votebot'  # The nick of the bot.
-    #DEFAULT_CHANNELS = ('#bot-test', )
+    BOT_NAME = 'votebot'  # The nick of the bot.
+    STATS = {
+        'C17JQ5RRT': {
+            'office': 'Chairperson',
+            'topic': 'Chairperson Voting Channel',
+            'purpose': 'Conduct chairperson election.',
+            'candidates': {}
+        },
+        'C17H9HHU3': {
+            'office': 'Secretary',
+            'topic': 'Secretary Voting Channel',
+            'purpose': 'Conduct secretary election.',
+            'candidates': {}
+        },
+        'C17JQQH0F': {
+            'office': 'Treasurer',
+            'topic': 'Treasurer Voting Channel',
+            'purpose': 'Conduct treasurer election.',
+            'candidates': {}
+        }
+    }
+    DATABASE_URL = 'sqlite:///votebot_data.sqlite'
 
     def __repr__(self):
         return running_mode.format(mode='deploy')

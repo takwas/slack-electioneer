@@ -76,6 +76,16 @@ cmds = {
                             """
                             )
                             ),
+    'initiate' : Command(cmd='initiate', callback=actions.do_initiate,
+                        help_text=textwrap.dedent(
+                            """
+                            Usage:
+
+                                U1:\t:initiate
+                                    Prepare this channel for an election.
+                            """
+                            )
+                            ),
     'link' : Command(cmd='link', callback=actions.do_link,
                         help_text=textwrap.dedent(
                             """
