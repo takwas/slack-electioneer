@@ -79,7 +79,12 @@ class TestConfig(Config):
             'office': 'test',
             'topic': 'Vote System Testing Channel',
             'purpose': 'Pre-election testing.',
-            'candidates': {}
+            'candidates': {
+                'U0NAKE0TT' :  {
+                    'post_ts' : '',
+                    'votes_count' : 0
+                }
+            }
         }
     }
     DATABASE_URL = 'sqlite:///votebot_test_data.sqlite'

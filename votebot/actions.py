@@ -30,10 +30,10 @@ import bot
 
 class Response(object):
     """
-    A Response object encapsulates a message as a newline-delimited
+    A `Response` object encapsulates a message as a newline-delimited
     `list` of `strings`.
 
-    An action will return a `Response` object.
+    An `action` will return a `Response` object.
 
     In creating a `Response` object, a single message `string` can be
     passed, but will be split into a `list` delimited by newlines
@@ -138,7 +138,14 @@ def do_initiate(bot, msg, **kwargs):
     """
     Return some 'about' information about the receiving bot.
     """
+    #get_names()
+    #names = bot.masters.get('acetakwas'); #DEBUG
+    channel = kwargs.get('event').get('channel')
+    for userid, data in bot.stats.get(channel).get('candidates').iteritems():
+        bot.add_candidate(userid, channel)
+    
     #bot.api_call('channels.setTopic', )
+    bot.post_msg(text='Who are the candidates', channel_name_or_id=channel)
     return Response(bot.about)
 
 def do_link(bot, msg, **kwargs):

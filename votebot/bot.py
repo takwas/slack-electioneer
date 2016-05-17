@@ -10,6 +10,7 @@
     :license: see LICENSE for details.
 """
 # standard library imports
+import os
 import sys
 import json
 import textwrap
@@ -121,7 +122,6 @@ class VoteBot(SlackClient):
 
     # Setup database for first time use
     def setup_db(self):
-        import subprocess
 
         def populate_db():
             # Save basic of Slack team members to DB profiles
@@ -140,10 +140,22 @@ class VoteBot(SlackClient):
                             live_ts='' # to be assigned when live msg is created
                     )
                 )
+            # Register candidates
+            for key, value in self.stats.iteritems():
+                candidates = value.get('candidates')
+                for candidate, data in candidates.iteritems():
+                    self.db.session.add(
+                        self.db.Candidacy(
+                            office_id=self.db.session.query(self.db.Office).filter_by(channel=key).first().id,
+                            candidate_id=self.db.session.query(self.db.Profile).filter_by(userid=candidate).first().id,
+                            post_ts=data.get('post_ts')
+                        )
+                    )
+
 
         print 'Preparing database...' #DEBUG
         db_filename = self.config.DATABASE_URL[self.config.DATABASE_URL.rfind('/')+1:]
-        subprocess.call(['rm', db_filename])
+        os.unlink(db_filename)
         self.connect_db()
         print 'Database ready!' #DEBUG
 
@@ -187,8 +199,9 @@ class VoteBot(SlackClient):
 
                 if event.get('channel') in self.voting_channels:
                     if event.get('type') == 'message':
-                        if event.user in self.masters.values():
-                            bot.parser.parse_msg(message)
+                        if event.get('user') in self.masters.values() \
+                            or event.get('user')==self.userid:
+                            self.parser.parse_msg(msg=event.get('text'), event=event)
                         else:
                             self.delete_msg(event.get('channel'), event.get('ts'))
                     elif event.get('type') == 'reaction_added' and \
@@ -200,18 +213,6 @@ class VoteBot(SlackClient):
                         )
                         if self.validate_vote(vote):
                             save_vote(vote)
-
-                # if message.get('text') == 'stat':
-                #     tak = self.masters.get('acetakwas')
-                #     #self.add_candidate(tak, message.get('channel'))
-                #     msg = self.get_stats(message.get('channel'))
-                #     print msg
-                #     self.post_msg(msg, message.get('channel'))
-
-                # # if message.get('user') == self.masters.get('acetakwas'):
-                #     response = self.delete_msg(
-                #         message.get('channel'), message.get('ts')
-                #     )
 
     # Parse vote object and save data to DB
     def save_vote(self, vote_obj):
@@ -259,37 +260,6 @@ class VoteBot(SlackClient):
                 return False
         return True
 
-    # Gets the Slack userid of member with `username`
-    def get_userid(self, username):
-        userid = None        
-        for member in self.team_members:
-            if member.get('name')==username:
-                userid = member.get('id')
-                break
-        return userid
-
-    # MARK
-    def get_userbio(self, userid):
-        bio = textwrap.dedent(
-            '''
-            Candidate: {mention}
-            > Name: *{real_name}*
-            > Title: _{title} _
-            
-            (_Vote by clicking on the green white checkmark below_)
-            '''.format(
-                mention=self.format_user_mention(userid),
-                real_name=user['profile']['real_name'],
-                title=user['profile']['title']
-            )
-        )
-        return bio
-
-    # MARK    
-    def get_user(self, userid):
-        response = self.api_call('users.info', user=userid)
-        return response.get('user')
-
     # Format userid into a mention
     def format_user_mention(self, userid):
         return '<@{userid}>'.format(userid=userid)
@@ -335,11 +305,42 @@ class VoteBot(SlackClient):
         delimiter = '\n{}\n'.format(time.time())
         return self.append(text, channel, msg_ts, delimiter)
 
+    # Gets the Slack userid of member with `username`
+    def get_userid(self, username):
+        userid = None        
+        for member in self.team_members:
+            if member.get('name')==username:
+                userid = member.get('id')
+                break
+        return userid
+
+    # MARK
+    def get_userbio(self, userid):
+        bio = textwrap.dedent(
+            '''
+            Candidate: {mention}
+            > Name: *{real_name}*
+            > Title: _{title} _
+            
+            (_Vote by clicking on the green white checkmark below_)
+            '''.format(
+                mention=self.format_user_mention(userid),
+                real_name=user['profile']['real_name'],
+                title=user['profile']['title']
+            )
+        )
+        return bio
+
+    # MARK    
+    def get_user(self, userid):
+        response = self.api_call('users.info', user=userid)
+        return response.get('user')
+
     # Adds a user's profile (as candidate) to the channel given
     def add_candidate(self, userid, channel_name_or_id):
         user = self.get_user(userid)
         self.post_msg(
-            msg=textwrap.dedent(
+            text=textwrap.dedent(
                 '''
                 Candidate: {mention}
                 > Name: *{real_name}*
@@ -402,3 +403,4 @@ class VoteBot(SlackClient):
             dict(channel=channel_name_or_id, ts=msg_ts)
         )
         return json.loads(response.text)
+

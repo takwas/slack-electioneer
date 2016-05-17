@@ -36,7 +36,10 @@ class ArgsParser(object):
         parameter, the message to parse.
         """
         # strip message of leading and trailing whitespace chars
-        msg = msg.strip()
+        try:
+            msg = strmsg.strip()
+        except AttributeError:
+            msg = ''
         msg = msg +' '
 
         # Use the delimiter to know if this is a message to try to parse.
@@ -48,7 +51,7 @@ class ArgsParser(object):
 
             if is_valid_cmd(cmd):
                 try:
-                    return cmds.get(cmd).callback(bot=self.bot, msg=msg[cmd_width:].strip(), **kwargs)
+                    return cmds.get(cmd).execute(bot=self.bot, msg=msg[cmd_width:].strip(), **kwargs)
                 except AttributeError:
                     pass
             elif bot.waiting:
