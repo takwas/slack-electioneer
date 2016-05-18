@@ -255,7 +255,7 @@ def do_initiate(bot, msg, **kwargs):
 #     return response
 
 
-def do_masters(bot, msg, **kwargs):
+def do_admins(bot, msg, **kwargs):
     """
     Return the usernames of those who currently have admin priviledges over
     the bot receiving this message.
@@ -263,10 +263,11 @@ def do_masters(bot, msg, **kwargs):
     channel = kwargs.get('event').get('channel')
     bot.post_msg(
         text='My admins are: {admins}'.format(
-            admins=', '.join([bot.format_user_mention(x) for x in bot.masters.values()]),
+            admins=', '.join([bot.format_user_mention(x) for x in bot.masters.values()])
+        ),
             channel_name_or_id=channel
-        )
     )
+    
     return True
 
 

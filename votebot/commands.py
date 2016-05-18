@@ -122,7 +122,7 @@ cmds = {
     #                         """
     #                         )
     #                         ),
-    'admins' : Command(cmd='admins', callback=actions.do_masters,
+    'admins' : Command(cmd='admins', callback=actions.do_admins,
                         help_text=textwrap.dedent(
                             """
                             >>> *Usage:*

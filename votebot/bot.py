@@ -200,7 +200,8 @@ class VoteBot(SlackClient):
                 #print event # DEBUG
 
                 if event.get('channel') in self.voting_channels:
-                    if event.get('type') == 'message':
+                    if event.get('type') == 'message' and event.get('user')!=self.userid:
+                        print event
                         self.log_msg(
                             text='{name} wrote:\t{msg}'.format(
                                 name=event.get('user'),
