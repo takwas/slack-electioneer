@@ -10,7 +10,7 @@
     :license: see LICENSE for details.
 """
 # standard library imports
-import os, sys
+import os, sys, glob, time
 
 # local imports
 from votebot import create_votebot, config as conf
@@ -44,6 +44,14 @@ if __name__ == '__main__':
     # Do we need to setup DB for first time use?
     db_filename = config.DATABASE_URL[config.DATABASE_URL.rfind('/')+1:]
     if len(args) > 1 and args[1] == 'setup' or not os.path.exists(db_filename):
+        # Backup old log files
+        for f in glob.glob('log*txt'):
+            try:
+                os.rename(f, 'backup_logs/{}_{}.txt'.format(f.replace('.txt', ''), '_'.join(time.ctime().replace(':', ' ').split())))
+            except OSError:
+                os.mkdir('backup_logs')
+                os.rename(f, 'backup_logs/{}_{}.txt'.format(f.replace('.txt', ''), '_'.join(time.ctime().replace(':', ' ').split())))
+
         votebot.setup_db()
         votebot.load_data()
     else:

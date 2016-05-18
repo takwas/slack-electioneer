@@ -112,6 +112,8 @@ class VoteBot(SlackClient):
                     } for x in office.candidacies
                 }
             }
+        if not self.stats:
+            print 'No data found! Run setup first.'
 
     # Do initial data loading
     def load_data(self):
@@ -172,6 +174,7 @@ class VoteBot(SlackClient):
 
     # Connect to Slack's RTM API
     def connect_rtm(self):
+        print 'Votebot connecting to RTM API...' #DEBUG
         if self.rtm_connect():
             print 'Votebot connected!' #DEBUG
         else:
@@ -179,6 +182,7 @@ class VoteBot(SlackClient):
     
     # Make bot join voting channels
     def join_voting_channels(self):
+        print 'Joining voting channels...!' #DEBUG
         for channel in self.voting_channels:
             self.server.join_channel(channel)
             channel_info = self.api_call('channels.info', channel=channel)

@@ -79,7 +79,8 @@ class TestConfig(Config):
 
     BOT_NAME = 'sawkat'
     STATS = {
-        'C195MMLKU': {
+        #'C195MMLKU': {
+        'C19RDTTSQ': {
             'office': 'Test Office',
             'topic': 'Vote System Testing Channel',
             'purpose': 'Pre-election testing.',

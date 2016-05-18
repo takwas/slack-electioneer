@@ -25,7 +25,6 @@
 import textwrap
 
 # local imports
-import bot
 import utils
 
 
@@ -176,16 +175,12 @@ def do_initiate(bot, msg, **kwargs):
 
         I will now list the candidates. Happy Voting :simple_smile:
 
-        '''.format(
-            name=bot.username,
-        )
+        '''.format(name=bot.username)
     )
-    #:sleuth_or_spy:These people can instruct me: *{admins}*
-    #admins=', '.join([bot.format_user_mention(x) for x in bot.masters.values()])
 
     # Clear channel
     bot.clear_channel(channel)
-    print 'DEBUG output' # DEBUG
+    
     # Set channel topic
     bot.set_channel_topic(bot.stats.get(channel).get('topic'), channel)
     # Show instructions
@@ -214,47 +209,6 @@ def do_initiate(bot, msg, **kwargs):
     #return Response(bot.about)
 
 
-# def do_link(bot, msg, **kwargs):
-#     """
-#     Returns the URL to the webpage of the user whose nick is contained
-#     as parameter in `msg`.
-#     """
-#     # Show help message if command was entered without args
-#     if msg is None or msg == '' or msg == ' ':
-#         return do_help(bot=bot, msg='link')
-
-#     links_data = utils.reload_links('data/links.json')
-#     response = Response(links_data.get(msg,
-#                         'google.com/?search={query}'.format(query=msg)))
-#     return response
-
-# def do_log(bot, msg, **kwargs):
-#     """
-#     This will perform logging.
-
-#     The logging is configurable based on the parameters in `msg`.
-#     """
-#     # Show help message if command was entered without args
-#     if msg is None or msg == '' or msg == ' ':
-#         return do_help(bot=bot, msg='log')
-
-#     # THIS IS NOT FULLY IMPLEMENTED YET
-
-#     now = datetime.datetime.now()
-#     filename = "logs/Logs-%s.txt" % now.strftime("%Y-%m-%d-%H-%M")
-#     logger = MessageLogger(open(self.filename, "a"))
-
-#     logger.log("[## Class Started at %s ##]" %
-#                 time.asctime(time.localtime(time.time())))
-#     user = user.split('!', 1)[0]
-#     self.logger.log("<%s> %s" % (user, msg))
-#     self.islogging = True
-
-#     response = Response("Now logging in file {filename}".format(
-#                         filename="some_filename"))
-#     return response
-
-
 def do_admins(bot, msg, **kwargs):
     """
     Return the usernames of those who currently have admin priviledges over
@@ -265,7 +219,7 @@ def do_admins(bot, msg, **kwargs):
         text='My admins are: {admins}'.format(
             admins=', '.join([bot.format_user_mention(x) for x in bot.masters.values()])
         ),
-            channel_name_or_id=channel
+        channel_name_or_id=channel
     )
     
     return True
