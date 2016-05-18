@@ -200,8 +200,11 @@ class VoteBot(SlackClient):
                 #print event # DEBUG
 
                 if event.get('channel') in self.voting_channels:
-                    if event.get('type') == 'message' and event.get('user')!=self.userid:
+                    if event.get('type') == 'message' and event.get('text') is not None:
+                    #and event.get('user')!=self.userid and event.get('username')!='slackbot':
+                        # Guard against UnicodeEncodeError
                         print event
+                        event['text'] = event.get('text').encode('utf-8')
                         self.log_msg(
                             text='{name} wrote:\t{msg}'.format(
                                 name=event.get('user'),
