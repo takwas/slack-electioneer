@@ -34,16 +34,12 @@ admin_token = config.ADMIN_TOKEN
 if admin_token is None:
     print 'Admin token not provided, bot will not perform delete operations.'
 
-
-if __name__ == '__main__':
-    print 'Votebot running...'
-    
-    args = sys.argv
+def run(setup=False, config):
     votebot = create_votebot(config)
-
     # Do we need to setup DB for first time use?
     db_filename = config.DATABASE_URL[config.DATABASE_URL.rfind('/')+1:]
-    if len(args) > 1 and args[1] == 'setup' or not os.path.exists(db_filename):
+
+    if setup:
         # Backup old log files
         for f in glob.glob('log*txt'):
             try:
@@ -59,3 +55,11 @@ if __name__ == '__main__':
 
     # Connect to RTM API and begin listening for events
     votebot.listen()
+
+
+if __name__ == '__main__':
+    args = sys.argv
+    print 'Votebot running...'
+
+    if len(args) > 1 and args[1] == 'setup' or not os.path.exists(db_filename):
+        run(setup=True, config)
