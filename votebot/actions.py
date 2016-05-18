@@ -26,6 +26,7 @@ import textwrap
 
 # local imports
 import bot
+import utils
 
 
 class Response(object):
@@ -86,6 +87,7 @@ def do_help(bot, msg=None, **kwargs):
 
     Indicate if the command does not exist.
     """
+    channel = kwargs.get('event').get('channel')
     # Show help message if command was entered without args
     if msg is None or msg == '' or msg == ' ':
 
@@ -94,32 +96,35 @@ def do_help(bot, msg=None, **kwargs):
             Inner helper function.
 
             This should give an output of the form:
-                :help, :about, :link, :log, :masters, :paste,
-                :whatdidimiss, :resource, :submit
+                :help, :about, :clear, :initiate, :admins
             """
             from commands import cmds
 
             return ':' + ', :'.join(sorted(cmds.keys()))
 
-        return \
-            Response(textwrap.dedent(
-                    """
-                    Showing general help.
+        return bot.post_msg(
+            text=textwrap.dedent(
+                """
+                *Showing general help.*
 
-                    List of commands:
-                        {cmds}
+                List of commands:
+                    {cmds}
 
-                    For help on a command, type:
-                        :help [command]
+                For help on a command, type:
+                    :help [command]
 
-                    E.g :help paste
-                    """.format(cmds=format_cmds())
-                    )
-                    )
+                E.g :help paste
+                """.format(cmds=format_cmds())
+            ),
+            channel_name_or_id=channel
+        )
 
     elif utils.is_valid_cmd(msg):
         from commands import cmds
-        return Response(cmds.get(msg).help_text)
+        return bot.post_msg(
+            text=cmds.get(msg).help_text,
+            channel_name_or_id=channel
+        )
 
     else:
         return Response(
@@ -132,8 +137,19 @@ def do_about(bot, msg, **kwargs):
     """
     Return some 'about' information about the receiving bot.
     """
+    channel = kwargs.get('event').get('channel')
+    return bot.post_msg(
+        text=bot.about,
+        channel_name_or_id=channel
+    )
+
     return Response(bot.about)
 
+def do_clear(bot, msg, **kwargs):
+    channel = kwargs.get('event').get('channel')
+    # Clear channel
+    bot.clear_channel(channel)
+    return True    
 
 def do_initiate(bot, msg, **kwargs):
     """
@@ -142,34 +158,34 @@ def do_initiate(bot, msg, **kwargs):
     channel = kwargs.get('event').get('channel')
     instructions = textwrap.dedent(
         '''
-        :cop:My name is *{name}*.
-        I am your election police, and I can only take instructions from my admins.
-
-        :sleuth_or_spy:My admins are: *{admins}*
+        :cop:I name is *{name}*, your election police
 
         
         :grey_question:*How to Vote:*
-        Voting in here is simple. The candidates' profiles are listed with a green-white checkmark beneath their profiles. All you have to do is click the checkmark once for your preferred candidate.
+        Voting in here is simple. Each candidate's profile is listed with a white-on-green checkmark beneath their profile. All you have to do is *click the checkmark once* for your preferred candidate.
+
 
         :warning:*Rules*:
-        1. *Only your first vote counts*. Subsequent votes or attemps to remove already cast ballots would be ignored.
+        1. *Only your first vote counts*. Regardless of the count on checkmark, only your first vote is valid and recorded. Subsequent votes or attemps to remove already cast ballots would be ignored.
 
         2. *Do not try to post any messages in this channel* as such messages would be deleted immediately.
 
         Now...
-        > _Be Nice, Be Respectful, Be Civil_ :)
+        > _Be Nice, Be Respectful, Be Civil_ :simple_smile:
 
 
         I will now list the candidates. Happy Voting :simple_smile:
 
         '''.format(
             name=bot.username,
-            admins=', '.join([bot.format_user_mention(x) for x in bot.masters.values()])
         )
     )
-    
+    #:sleuth_or_spy:These people can instruct me: *{admins}*
+    #admins=', '.join([bot.format_user_mention(x) for x in bot.masters.values()])
+
     # Clear channel
     bot.clear_channel(channel)
+    print 'DEBUG output' # DEBUG
     # Set channel topic
     bot.set_channel_topic(bot.stats.get(channel).get('topic'), channel)
     # Show instructions
@@ -184,23 +200,33 @@ def do_initiate(bot, msg, **kwargs):
         bot.add_candidate(userid, channel)
         bot.vote_for(userid, channel)
 
+    live_stats = bot.get_stats(channel)
+    if live_stats is not None:
+        response = bot.post_msg(
+            text=live_stats,
+            channel_name_or_id=channel
+        )
+        bot.stats.get(channel)['live_ts'] = response.get('ts')
+
+    bot.log_msg('Channel{} prepared for voting.'.format(channel), channel)
+
     return True
     #return Response(bot.about)
 
 
-def do_link(bot, msg, **kwargs):
-    """
-    Returns the URL to the webpage of the user whose nick is contained
-    as parameter in `msg`.
-    """
-    # Show help message if command was entered without args
-    if msg is None or msg == '' or msg == ' ':
-        return do_help(bot=bot, msg='link')
+# def do_link(bot, msg, **kwargs):
+#     """
+#     Returns the URL to the webpage of the user whose nick is contained
+#     as parameter in `msg`.
+#     """
+#     # Show help message if command was entered without args
+#     if msg is None or msg == '' or msg == ' ':
+#         return do_help(bot=bot, msg='link')
 
-    links_data = utils.reload_links('data/links.json')
-    response = Response(links_data.get(msg,
-                        'google.com/?search={query}'.format(query=msg)))
-    return response
+#     links_data = utils.reload_links('data/links.json')
+#     response = Response(links_data.get(msg,
+#                         'google.com/?search={query}'.format(query=msg)))
+#     return response
 
 # def do_log(bot, msg, **kwargs):
 #     """
@@ -231,11 +257,17 @@ def do_link(bot, msg, **kwargs):
 
 def do_masters(bot, msg, **kwargs):
     """
-    Return the IRC nicks of those who currently have admin priviledges over
+    Return the usernames of those who currently have admin priviledges over
     the bot receiving this message.
     """
-    response = Response('Bosses: ['+';'.join(bot.masters)+']')
-    return response
+    channel = kwargs.get('event').get('channel')
+    bot.post_msg(
+        text='My admins are: {admins}'.format(
+            admins=', '.join([bot.format_user_mention(x) for x in bot.masters.values()]),
+            channel_name_or_id=channel
+        )
+    )
+    return True
 
 
 def do_override(bot, msg, **kwargs):
@@ -247,19 +279,20 @@ def do_override(bot, msg, **kwargs):
     """
     # Show help message if command was entered without args
     if msg is None or msg == '' or msg == ' ':
-        return do_help(bot=bot, msg='ctrl')
+        return do_help(bot=bot, msg='ctrl', **kwargs)
 
     # Get the name of the channel to post `msg` to
     channel, msg = parse_channel_name(msg)
-
+    channel = kwargs.get('event').get('channel')
     # Is there a message to post?
     if len(msg)>0:
         ## The initial space indicates that the message is a manual override.
         #response = Response(' '+msg, general=True, channel=channel)
-        response = Response(msg, general=True, channel=channel)
-    else:
-        response = Response()
-    return response
+        bot.post_msg(
+            text=msg,
+            channel_name_or_id=channel
+        )
+    return True
 
 
 # def do_submit(bot, msg, **kwargs):

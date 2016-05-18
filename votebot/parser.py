@@ -10,7 +10,8 @@
     :license: see LICENSE for details.
 """
 # local imports
-from utils import cmds, is_valid_cmd
+import utils
+import commands
 from actions import Response
 
 
@@ -49,13 +50,13 @@ class ArgsParser(object):
             cmd_width = msg.find(' ')
             cmd = msg[1:cmd_width]
 
-            if is_valid_cmd(cmd):
+            if utils.is_valid_cmd(cmd):
                 try:
-                    return cmds.get(cmd).execute(bot=self.bot, msg=msg[cmd_width:].strip(), **kwargs)
+                    return commands.cmds.get(cmd).execute(bot=self.bot, msg=msg[cmd_width:].strip(), **kwargs)
                 except AttributeError:
                     pass
-            elif self.bot.waiting:
-                if msg.startswith(':names'):
-                    bot.save_candidates(msg.split(':names')[1].strip())
+            # elif self.bot.waiting:
+            #     if msg.startswith(':names'):
+            #         bot.save_candidates(msg.split(':names')[1].strip())
             
             return Response("Invalid command!. Type ':help' for help")

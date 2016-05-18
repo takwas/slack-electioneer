@@ -8,6 +8,7 @@
 *.sqlite
 *~lock*
 Log~
+log*
 nohup.out
 gitnore
 temp.py

@@ -42,7 +42,8 @@ if __name__ == '__main__':
     votebot = create_votebot(config)
 
     # Do we need to setup DB for first time use?
-    if len(args) > 1 and args[1] == 'setup':
+    db_filename = config.DATABASE_URL[config.DATABASE_URL.rfind('/')+1:]
+    if len(args) > 1 and args[1] == 'setup' or not os.path.exists(db_filename):
         votebot.setup_db()
         votebot.load_data()
     else:

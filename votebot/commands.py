@@ -55,7 +55,7 @@ cmds = {
     'help' : Command(cmd='help', callback=actions.do_help,
                         help_text=textwrap.dedent(
                             """
-                            Usage:
+                            >>> *Usage:*
 
                                 U1:\t:help
                                     Show general help.
@@ -69,63 +69,73 @@ cmds = {
     'about' : Command(cmd='about', callback=actions.do_about,
                         help_text=textwrap.dedent(
                             """
-                            Usage:
+                            >>> *Usage:*
 
                                 U1:\t:about
                                     Show 'about' information for this bot.
                             """
                             )
                             ),
+    'clear' : Command(cmd='clear', callback=actions.do_clear,
+                        help_text=textwrap.dedent(
+                            """
+                            >>> *Usage:*
+
+                                U1:\t:clear
+                                    Clear messages in this channel.
+                            """
+                            )
+                            ),
     'initiate' : Command(cmd='initiate', callback=actions.do_initiate,
                         help_text=textwrap.dedent(
                             """
-                            Usage:
+                            >>> *Usage:*
 
                                 U1:\t:initiate
                                     Prepare this channel for an election.
                             """
                             )
                             ),
-    'link' : Command(cmd='link', callback=actions.do_link,
-                        help_text=textwrap.dedent(
-                            """
-                            Usage:
+    # 'link' : Command(cmd='link', callback=actions.do_link,
+    #                     help_text=textwrap.dedent(
+    #                         """
+    #                         >>> *Usage:*
 
-                                U1:\t:link
-                                    Show help for this command.
+    #                             U1:\t:link
+    #                                 Show help for this command.
 
-                                U2:\t:link list
-                                    Show a list of available link titles.
+    #                             U2:\t:link list
+    #                                 Show a list of available link titles.
 
-                                U3:\t:link <link_title>
-                                    Show URL for <link_title>.
-                            """
-                            )
-                            ),
+    #                             U3:\t:link <link_title>
+    #                                 Show URL for <link_title>.
+    #                         """
+    #                         )
+    #                         ),
     # 'log' : Command(cmd='log', callback=actions.do_log,
     #                     help_text=textwrap.dedent(
     #                         """
-    #                         Usage:
+    #                         >>> *Usage:*
 
     #                             U1:\t:log
     #                                 Show help for this command.
     #                         """
     #                         )
     #                         ),
-    'boss' : Command(cmd='boss', callback=actions.do_masters,
+    'admins' : Command(cmd='admins', callback=actions.do_masters,
                         help_text=textwrap.dedent(
                             """
-                            Usage:
+                            >>> *Usage:*
 
-                                U1:\t:boss
-                                    Show the users who can control this bot.
+                                U1:\t:admins
+                                    Show the admins who can control this bot.
                             """
                             )
                             ),
     'ctrl' : Command(cmd='ctrl', callback=actions.do_override,
                         help_text=textwrap.dedent(
                             """
-                            Usage:
+                            >>> *Usage:*
 
                                 U1:\t:ctrl
                                     Show help for this command.

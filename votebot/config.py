@@ -47,7 +47,8 @@ class Config:
                         Source: {source_url}
                         """.format(source_url=SOURCE_URL)
                         )
-
+    ELECTION_START_TIME = None
+    ELECTION_END_TIME = None
 
 
 # Configuration used during
@@ -60,10 +61,13 @@ class DevConfig(Config):
             'office': 'test',
             'topic': 'Bot-Dev Testing Channel',
             'purpose': 'Test bots as you develop them.',
+            'live_ts': '',
+            'log_ts': '',
             'candidates': {}
         }
     }
     DATABASE_URL = 'sqlite:///votebot_dev_data.sqlite'
+    MODE = 'development'
 
     def __repr__(self):
         return running_mode.format(mode='development')
@@ -79,6 +83,8 @@ class TestConfig(Config):
             'office': 'Test Office',
             'topic': 'Vote System Testing Channel',
             'purpose': 'Pre-election testing.',
+            'live_ts': '',
+            'log_ts': '',
             'candidates': {
                 'U0NAKE0TT' :  {
                     'post_ts' : '',
@@ -111,22 +117,29 @@ class DeployConfig(Config):
             'office': 'Chairperson',
             'topic': 'Chairperson Voting Channel',
             'purpose': 'Conduct chairperson election.',
+            'live_ts': '',
+            'log_ts': '',
             'candidates': {}
         },
         'C17H9HHU3': {
             'office': 'Secretary',
             'topic': 'Secretary Voting Channel',
             'purpose': 'Conduct secretary election.',
+            'live_ts': '',
+            'log_ts': '',
             'candidates': {}
         },
         'C17JQQH0F': {
             'office': 'Treasurer',
             'topic': 'Treasurer Voting Channel',
             'purpose': 'Conduct treasurer election.',
+            'live_ts': '',
+            'log_ts': '',
             'candidates': {}
         }
     }
     DATABASE_URL = 'sqlite:///votebot_data.sqlite'
+    MODE = 'deploy'
 
     def __repr__(self):
         return running_mode.format(mode='deploy')

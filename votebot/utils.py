@@ -10,7 +10,8 @@
     :license: see LICENSE for details.
 """
 # local imports
-from commands import cmds
+import commands
+#from commands import cmds
 
 
 # Verifies the name format for a channel
@@ -29,4 +30,4 @@ from commands import cmds
 
 
 def is_valid_cmd(cmd):
-    return cmds.has_key(cmd)
+    return commands.cmds.has_key(cmd)
