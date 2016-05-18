@@ -38,7 +38,7 @@ Run bot with:
 $ python run.py
 ```
 
-*Working commands:*
+**Working commands:**
 
     List of commands:
        :about, :admins, :clear, :ctrl, :help, :initiate
