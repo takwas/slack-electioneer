@@ -114,6 +114,7 @@ class VoteBot(SlackClient):
             }
         if not self.stats:
             print 'No data found! Run setup first.'
+            sys.exit(1)
 
     # Do initial data loading
     def load_data(self):
