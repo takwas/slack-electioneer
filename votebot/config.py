@@ -55,6 +55,7 @@ class Config:
 # the development of our bot
 class DevConfig(Config):
 
+    DEBUG = True
     BOT_NAME = 'sawkat'
     STATS = {
         'C179BGHMY': {
@@ -67,7 +68,6 @@ class DevConfig(Config):
         }
     }
     DATABASE_URL = 'sqlite:///votebot_dev_data.sqlite'
-    MODE = 'development'
 
     def __repr__(self):
         return running_mode.format(mode='development')
@@ -77,6 +77,7 @@ class DevConfig(Config):
 # of our bot
 class TestConfig(Config):
 
+    TESTING = True
     BOT_NAME = 'sawkat'
     STATS = {
         #'C195MMLKU': {
@@ -124,7 +125,6 @@ class TestConfig(Config):
         }
     }
     DATABASE_URL = 'sqlite:///votebot_test_data.sqlite'
-    MODE = 'testing'
 
     def __repr__(self):
         return running_mode.format(mode='testing')
@@ -133,6 +133,7 @@ class TestConfig(Config):
 # Main configuration for when our bot is deployed on a server
 class DeployConfig(Config):
 
+    DEPLOY = True
     BOT_NAME = 'votebot'  # The nick of the bot.
     STATS = {
         'C17JQ5RRT': {
@@ -161,7 +162,6 @@ class DeployConfig(Config):
         }
     }
     DATABASE_URL = 'sqlite:///votebot_data.sqlite'
-    MODE = 'deploy'
 
     def __repr__(self):
         return running_mode.format(mode='deploy')

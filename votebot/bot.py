@@ -114,6 +114,7 @@ class VoteBot(SlackClient):
             }
         if not self.stats:
             print 'No data found! Run setup first.'
+            print 'Exiting...'
             sys.exit(1)
 
     # Do initial data loading
@@ -183,9 +184,13 @@ class VoteBot(SlackClient):
     
     # Make bot join voting channels
     def join_voting_channels(self):
-        print 'Joining voting channels...!' #DEBUG
+        print 'Joining voting channels...' #DEBUG
         for channel in self.voting_channels:
-            self.server.join_channel(channel)
+            self.server.api_requester.do(
+                self.admin_token,
+                'channels.join', # the API method to call
+                dict(name=channel)
+            )
             channel_info = self.api_call('channels.info', channel=channel)
             try:
                 if channel_info is not  None:
@@ -236,9 +241,7 @@ class VoteBot(SlackClient):
                         )
                         if self.validate_vote(vote):
                             self.save_vote(vote)
-                            print 'here'
                             self.update_live_stats(event.get('item').get('channel'))
-                            print 'here2'
                         else:
                             self.log_msg(
                                 text=textwrap.dedent(
@@ -329,7 +332,6 @@ class VoteBot(SlackClient):
         #candidate_userid = postts_candidate_cache.get(post_ts)
         #if candidate_userid is None:
         candidates = self.stats.get(channel).get('candidates')
-        print '%r' % candidates
         for candidate_userid, value in candidates.iteritems():
             if value.get('post_ts') == post_ts:
         #        postts_candidate_cache.set(post_ts, candidate)
@@ -380,8 +382,6 @@ class VoteBot(SlackClient):
         
         if prev_text is not None:
             new_text = callback(prev_text)
-        print prev_text
-        print new_text
 
         return self.api_call('chat.update',
             ts=msg_ts,
@@ -480,7 +480,7 @@ class VoteBot(SlackClient):
         self.db.session.commit()
 
         try:
-            if self.config.MODE == 'testing':
+            if self.config.TESING:
                 if not real_name or not title:
                     self.post_msg(
                         text='{mention}: *You should update your profile.*'.format(mention=self.format_user_mention(userid)),
@@ -537,7 +537,6 @@ class VoteBot(SlackClient):
                     for candidacy in candidacies:
                         if candidacy.office_id == office_id:
                             votes_count = len(candidacy.votes)
-                            print 'Count %d' %votes_count
                     self.stats[channel_name_or_id]['candidates'][userid]['votes_count'] = votes_count
 
                     stat_report += ' {mention}: `{count}` | '.format(
@@ -550,7 +549,7 @@ class VoteBot(SlackClient):
     def update_live_stats(self, channel_name_or_id):
         stats = self.get_stats(channel_name_or_id)
         ts = self.stats.get(channel_name_or_id).get('live_ts')
-        print self.edit_msg(channel_name_or_id, msg_ts=ts, callback=lambda x: stats)
+        self.edit_msg(channel_name_or_id, msg_ts=ts, callback=lambda x: stats)
 
 
     # Delete message with timestamp `msg_ts` from `channel`
@@ -580,4 +579,11 @@ class VoteBot(SlackClient):
         return self.api_call('channels.setPurpose', purpose=text, channel=channel_name_or_id)
 
     def pin_msg_to_channel(self, channel_name_or_id, msg_ts):
-        return self.api_call('pin.add', channel=channel_name_or_id, timestamp=msg_ts)
+        return self.api_call('pins.add', channel=channel_name_or_id, timestamp=msg_ts)
+
+    def invite_user_to_channel(self, channel_name_or_id, userid):
+        return self.api_call(
+            self.admin_token,
+            'channels.invite',
+            dict(channel=channel_name_or_id, user=userid)
+        )

@@ -96,32 +96,6 @@ cmds = {
                             """
                             )
                             ),
-    # 'link' : Command(cmd='link', callback=actions.do_link,
-    #                     help_text=textwrap.dedent(
-    #                         """
-    #                         >>> *Usage:*
-
-    #                             U1:\t:link
-    #                                 Show help for this command.
-
-    #                             U2:\t:link list
-    #                                 Show a list of available link titles.
-
-    #                             U3:\t:link <link_title>
-    #                                 Show URL for <link_title>.
-    #                         """
-    #                         )
-    #                         ),
-    # 'log' : Command(cmd='log', callback=actions.do_log,
-    #                     help_text=textwrap.dedent(
-    #                         """
-    #                         >>> *Usage:*
-
-    #                             U1:\t:log
-    #                                 Show help for this command.
-    #                         """
-    #                         )
-    #                         ),
     'admins' : Command(cmd='admins', callback=actions.do_admins,
                         help_text=textwrap.dedent(
                             """
@@ -144,18 +118,6 @@ cmds = {
                             """
                             )
                             )
-    # 'submit' : Command(cmd='submit', callback=actions.do_submit,
-    #                     help_text=textwrap.dedent(
-    #                         """
-    #                         Usage:
-
-    #                             U1:\t:submit
-    #                                 Show help for this command.
-    #                             U2:\t:submit <some_text>
-    #                                 Send a feedback to this bot's developer. <some_text> is the message to send.
-    #                         """
-    #                         )
-    #                         )
 }
 
 

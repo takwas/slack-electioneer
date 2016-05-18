@@ -112,7 +112,7 @@ def do_help(bot, msg=None, **kwargs):
                 For help on a command, type:
                     :help [command]
 
-                E.g :help paste
+                E.g :help about
                 """.format(cmds=format_cmds())
             ),
             channel_name_or_id=channel
@@ -189,7 +189,7 @@ def do_initiate(bot, msg, **kwargs):
     # Set channel purpose
     bot.set_channel_purpose(bot.stats.get(channel).get('purpose'), channel)
     # Pin message to channel
-    bot.pin_msg_to_channel(channel, instruction_response.get('ts'))
+    print bot.pin_msg_to_channel(channel, instruction_response.get('ts'))
 
     # Add candidates for this office
     for userid, data in bot.stats.get(channel).get('candidates').iteritems():
@@ -207,7 +207,12 @@ def do_initiate(bot, msg, **kwargs):
         bot.db.session.commit()
 
     bot.log_msg('Channel{} prepared for voting.'.format(channel), channel)
-
+    if bot.config.DEBUG or bot.config.TESTING:
+        for userid in bot.masters.values():
+            print bot.invite_user_to_channel(channel, userid)
+    else:
+        for member in bot.team_members:
+            bot.invite_user_to_channel(channel, member.get('id'))
     return True
     #return Response(bot.about)
 

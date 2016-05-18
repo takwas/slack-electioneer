@@ -1,7 +1,5 @@
 SQLAlchemy==1.0.12
 argparse==1.2.1
-redis==2.6.2
-redis-simple-cache==0.0.8
 requests==2.10.0
 six==1.10.0
 slackclient==1.0.0
