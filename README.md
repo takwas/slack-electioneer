@@ -37,3 +37,13 @@ Run bot with:
 ```bash
 $ python run.py
 ```
+
+*Working commands:*
+
+    List of commands:
+       :about, :admins, :clear, :ctrl, :help, :initiate
+
+    For help on a command, type:
+       :help [command]
+
+    E.g :help paste

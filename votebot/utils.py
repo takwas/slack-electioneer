@@ -17,16 +17,14 @@ import commands
 # Verifies the name format for a channel
 # Prepends it with a "#", if it doesn't
 # already start with one
-# def verify_channel(channel):
-#     if channel:
-#         if not channel.startswith('#'):
-#             channel = '#' + channel
-#     else:
-#         pass
+def verify_channel(channel):
+    if channel:
+        if not channel.startswith('#'):
+            channel = '#' + channel
+    else:
+        pass
 
-#     return channel
-
-#reload_links('../links.json')
+    return channel
 
 
 def is_valid_cmd(cmd):

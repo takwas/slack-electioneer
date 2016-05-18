@@ -284,7 +284,7 @@ def do_override(bot, msg, **kwargs):
 
     # Get the name of the channel to post `msg` to
     channel, msg = parse_channel_name(msg)
-    channel = kwargs.get('event').get('channel')
+    #channel = kwargs.get('event').get('channel')
     # Is there a message to post?
     if len(msg)>0:
         ## The initial space indicates that the message is a manual override.
@@ -321,7 +321,7 @@ def parse_channel_name(msg):
     import utils
 
     channel_name_start = msg.find('=')+1
-    channel_name_end = msg.find(' ')
+    channel_name_end = msg.find(' ', channel_name_start)
     channel = msg[channel_name_start:channel_name_end]
     channel = utils.verify_channel(channel)
     msg = msg[channel_name_end:].strip()
