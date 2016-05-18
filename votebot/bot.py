@@ -380,7 +380,10 @@ class VoteBot(SlackClient):
         
         if prev_text is not None:
             new_text = callback(prev_text)
-        return self.api_call('chats.update',
+        print prev_text
+        print new_text
+
+        return self.api_call('chat.update',
             ts=msg_ts,
             text=new_text,
             channel=channel,
@@ -522,7 +525,7 @@ class VoteBot(SlackClient):
             if candidates_profiles:
                 stat_report = textwrap.dedent(
                     '''
-                    *STATS*
+                    *Live Stats*
                     > 
                     '''
                 )
@@ -547,7 +550,7 @@ class VoteBot(SlackClient):
     def update_live_stats(self, channel_name_or_id):
         stats = self.get_stats(channel_name_or_id)
         ts = self.stats.get(channel_name_or_id).get('live_ts')
-        self.edit_msg(channel_name_or_id, msg_ts=ts, callback=lambda x: stats)
+        print self.edit_msg(channel_name_or_id, msg_ts=ts, callback=lambda x: stats)
 
 
     # Delete message with timestamp `msg_ts` from `channel`
