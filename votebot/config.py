@@ -100,6 +100,27 @@ class TestConfig(Config):
                     'votes_count' : 0
                 },
             }
+        },
+        'C195MMLKU': {
+            'office': 'Test Office 2',
+            'topic': 'Vote System Testing Channel',
+            'purpose': 'Pre-election testing.',
+            'live_ts': '',
+            'log_ts': '',
+            'candidates': {
+                'U0NAKE0TT' :  {
+                    'post_ts' : '',
+                    'votes_count' : 0
+                },
+                'U0NA6G39N' :  {
+                    'post_ts' : '',
+                    'votes_count' : 0
+                },
+                'U0NAZ4CRL' :  {
+                    'post_ts' : '',
+                    'votes_count' : 0
+                },
+            }
         }
     }
     DATABASE_URL = 'sqlite:///votebot_test_data.sqlite'

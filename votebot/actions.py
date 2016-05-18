@@ -157,7 +157,7 @@ def do_initiate(bot, msg, **kwargs):
     channel = kwargs.get('event').get('channel')
     instructions = textwrap.dedent(
         '''
-        :cop:I name is *{name}*, your election police
+        :cop:I am *{name}*, your election police.
 
         
         :grey_question:*How to Vote:*
@@ -174,13 +174,14 @@ def do_initiate(bot, msg, **kwargs):
 
 
         I will now list the candidates. Happy Voting :simple_smile:
+        > One more thing: _You can vote for yourself._
 
         '''.format(name=bot.username)
     )
 
     # Clear channel
     bot.clear_channel(channel)
-    
+
     # Set channel topic
     bot.set_channel_topic(bot.stats.get(channel).get('topic'), channel)
     # Show instructions
@@ -202,6 +203,8 @@ def do_initiate(bot, msg, **kwargs):
             channel_name_or_id=channel
         )
         bot.stats.get(channel)['live_ts'] = response.get('ts')
+        bot.db.session.query(bot.db.Office).filter_by(channel=channel).first().live_ts=response.get('ts')
+        bot.db.session.commit()
 
     bot.log_msg('Channel{} prepared for voting.'.format(channel), channel)
 
