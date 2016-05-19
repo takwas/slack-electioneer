@@ -9,6 +9,9 @@
     :copyright: (c) 2016 by acetakwas
     :license: see LICENSE for details.
 """
+# standard library imports
+import os
+import textwrap
 
 # template text for building string
 # representations for config classes
@@ -19,9 +22,6 @@ running_mode = 'App running in {mode} mode.'
 # will be extended
 class Config:
 
-    # standard library imports
-    import os
-    import textwrap
 
 
     ADMIN_TOKEN = os.getenv('VOTEBOT_ADMIN_TOKEN', None)

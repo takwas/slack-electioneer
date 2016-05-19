@@ -16,7 +16,7 @@ import os, sys, glob, time
 from votebot import create_votebot, config as conf
 
 # Get running mode configuration from envvar or use default mode
-config_mode = 'test'#os.getenv('VOTEBOT_CONFIG_MODE', None)
+config_mode = os.getenv('VOTEBOT_CONFIG_MODE', None)
 if config_mode is None or config_mode not in ('dev', 'deploy', 'test'):
     print 'Value of environment variable: `VOTEBOT_CONFIG_MODE` not found or invalid!'
     print 'Using default configuration mode...'
