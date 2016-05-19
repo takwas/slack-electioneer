@@ -34,7 +34,7 @@ admin_token = config.ADMIN_TOKEN
 if admin_token is None:
     print 'Admin token not provided, bot will not perform delete operations.'
 
-def run(setup=False, config):
+def run(config, setup=False):
     votebot = create_votebot(config)
     # Do we need to setup DB for first time use?
     db_filename = config.DATABASE_URL[config.DATABASE_URL.rfind('/')+1:]
