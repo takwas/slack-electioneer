@@ -18,7 +18,9 @@ If you need to do more restricted things like "message deletion", and depending 
 Store the following environment variables:
 
 ```bash
-$ export VOTEBOT_TOKEN='your_slack_bot_token'
+$ export VOTEBOT_TOKEN='your_slack_bot_token' # Use for deployment bot
+$ export VOTEBOT_TOKEN_DEV='your_slack_bot_token' # Use for development bot
+$ export VOTEBOT_TOKEN_TEST='your_slack_bot_token' # Use for testing bot
 #'your_slack_bot_token' looks like this:
 #xoxb-44000072424-MITpf7zISPGGwoOJf6heio3r
 
@@ -46,4 +48,4 @@ $ python run.py
     For help on a command, type:
        :help [command]
 
-    E.g :help paste
+    E.g :help clear
