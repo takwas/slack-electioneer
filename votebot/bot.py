@@ -453,8 +453,14 @@ class VoteBot(SlackClient):
     # Adds a user's profile (as candidate) to the channel given
     def add_candidate(self, userid, channel_name_or_id):
         user = self.get_user(userid)
-        real_name = user['profile']['real_name']
-        title = user['profile']['title']
+        try:
+            real_name = user['profile']['real_name']
+        except:
+            real_name = ''
+        try:
+            title = user['profile']['title']
+        except:
+            title = ''
         response = self.post_msg(
             text=textwrap.dedent(
                 '''
