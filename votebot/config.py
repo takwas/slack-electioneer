@@ -57,7 +57,7 @@ class DevConfig(Config):
 
     DEBUG = True
     TOKEN = os.getenv('VOTEBOT_TOKEN_DEV', None)
-    BOT_NAME = 'votebot'
+    BOT_NAME = 'sawkat'
     STATS = {
         'C179BGHMY': {
             'office': 'test',
@@ -80,7 +80,7 @@ class TestConfig(Config):
 
     TESTING = True
     TOKEN = os.getenv('VOTEBOT_TOKEN_TEST', None)
-    BOT_NAME = 'votebot'
+    BOT_NAME = 'sawkat'
     STATS = {
         #'C195MMLKU': {
         'C19RDTTSQ': {
