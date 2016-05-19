@@ -609,9 +609,9 @@ class VoteBot(SlackClient):
     # Report if elections are ongoing
     def update_election_status(self, channel_name_or_id, elections_on=False):
         if elections_on:
-            msg = '*ELECTIONS ARE ONGOING*'
+            msg = '*ELECTIONS ARE ONGOING IN THIS CHANNEL*'
         else:
-            msg = '*NO ONGOING ELECTIONS*'
+            msg = '*NO ONGOING ELECTIONS IN THIS CHANNEL*'
         ts = self.stats.get(channel_name_or_id).get('election_status_ts')
         self.edit_msg(channel_name_or_id, msg_ts=ts, callback=lambda x: msg)
 

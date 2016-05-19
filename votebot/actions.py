@@ -189,7 +189,7 @@ def do_initiate(bot, msg, **kwargs):
         #     bot.invite_user_to_channel(channel, userid)
     else:
         for member in bot.team_members:
-            print bot.invite_user_to_channel(channel, member.get('id'))
+            bot.invite_user_to_channel(channel, member.get('id'))
     print 'End Inviting...'
 
     # Set channel topic
@@ -217,7 +217,7 @@ def do_initiate(bot, msg, **kwargs):
         bot.db.session.query(bot.db.Office).filter_by(channel=channel).first().live_ts=response.get('ts')
 
     response = bot.post_msg(
-        text='*NO ONGOING ELECTIONS*',
+        text='*NO ONGOING ELECTIONS IN THIS CHANNEL*',
         channel_name_or_id=channel
     )
     bot.stats.get(channel)['election_status_ts'] = response.get('ts')
