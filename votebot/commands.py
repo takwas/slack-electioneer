@@ -96,6 +96,36 @@ cmds = {
                             """
                             )
                             ),
+    'setup' : Command(cmd='setup', callback=actions.do_setup,
+                        help_text=textwrap.dedent(
+                            """
+                            >>> *Usage:*
+
+                                U1:\t:setup
+                                    Do clean refresh of all data.
+                            """
+                            )
+                            ),
+    'session-start' : Command(cmd='session-start', callback=actions.do_session_start,
+                        help_text=textwrap.dedent(
+                            """
+                            >>> *Usage:*
+
+                                U1:\t:session-start
+                                    session-start elections.
+                            """
+                            )
+                            ),
+    'session-stop' : Command(cmd='session-stop', callback=actions.do_session_stop,
+                        help_text=textwrap.dedent(
+                            """
+                            >>> *Usage:*
+
+                                U1:\t:session-stop
+                                    End elections.
+                            """
+                            )
+                            ),
     'admins' : Command(cmd='admins', callback=actions.do_admins,
                         help_text=textwrap.dedent(
                             """

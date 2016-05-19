@@ -181,6 +181,16 @@ def do_initiate(bot, msg, **kwargs):
 
     # Clear channel
     bot.clear_channel(channel)
+    
+    print 'Begin Inviting...'
+    if 'DEBUG' in dir(bot.config) or 'TESTING' in dir(bot.config):
+        print 'test invites'
+        # for userid in bot.masters.values():
+        #     bot.invite_user_to_channel(channel, userid)
+    else:
+        for member in bot.team_members:
+            print bot.invite_user_to_channel(channel, member.get('id'))
+    print 'End Inviting...'
 
     # Set channel topic
     bot.set_channel_topic(bot.stats.get(channel).get('topic'), channel)
@@ -195,6 +205,7 @@ def do_initiate(bot, msg, **kwargs):
     for userid, data in bot.stats.get(channel).get('candidates').iteritems():
         bot.add_candidate(userid, channel)
         bot.vote_for(userid, channel)
+    #bot.update_live_stats(channel)
 
     live_stats = bot.get_stats(channel)
     if live_stats is not None:
@@ -204,17 +215,76 @@ def do_initiate(bot, msg, **kwargs):
         )
         bot.stats.get(channel)['live_ts'] = response.get('ts')
         bot.db.session.query(bot.db.Office).filter_by(channel=channel).first().live_ts=response.get('ts')
-        bot.db.session.commit()
+
+    response = bot.post_msg(
+        text='*NO ONGOING ELECTIONS*',
+        channel_name_or_id=channel
+    )
+    bot.stats.get(channel)['election_status_ts'] = response.get('ts')
+    bot.db.session.query(bot.db.Office).filter_by(channel=channel).first().election_status_ts=response.get('ts')
+    bot.stats.get(channel)['election_status'] = False
+    bot.db.session.query(bot.db.Office).filter_by(channel=channel).first().election_status= False
+    bot.db.session.commit()
 
     bot.log_msg('Channel{} prepared for voting.'.format(channel), channel)
-    if bot.config.DEBUG or bot.config.TESTING:
-        for userid in bot.masters.values():
-            print bot.invite_user_to_channel(channel, userid)
-    else:
-        for member in bot.team_members:
-            bot.invite_user_to_channel(channel, member.get('id'))
+    
     return True
     #return Response(bot.about)
+
+
+def do_session_start(bot, msg, **kwargs):
+    """
+    Start an election session
+    """
+    channel = kwargs.get('event').get('channel')
+    bot.stats.get(channel)['election_status'] = True
+    bot.db.session.query(bot.db.Office).filter_by(channel=channel).first().election_status= True
+    bot.db.session.commit()
+    bot.update_election_status(channel, True)
+
+    return True
+
+
+def do_session_stop(bot, msg, **kwargs):
+    """
+    End an election session
+    """
+    channel = kwargs.get('event').get('channel')
+    bot.stats.get(channel)['election_status'] = False
+    bot.db.session.query(bot.db.Office).filter_by(channel=channel).first().election_status= False
+    bot.db.session.commit()
+    bot.update_election_status(channel, False)
+
+    return True
+
+
+def do_setup(bot, msg, **kwargs):
+    """
+    End an election session
+    """
+    #channel = kwargs.get('event').get('channel')
+
+    # Backup old log files
+    # try:
+    #     for f in glob.glob('../log*txt'):
+    #         try:
+    #             os.rename(f, '../backup_logs/{}_{}.txt'.format(f.replace('.txt', ''), '_'.join(time.ctime().replace(':', ' ').split())))
+    #         except OSError:
+    #             os.mkdir('../backup_logs')
+    #             os.rename(f, '../backup_logs/{}_{}.txt'.format(f.replace('.txt', ''), '_'.join(time.ctime().replace(':', ' ').split())))
+    #     bot.setup_db()
+    #     bot.load_data()
+    #     print 'Setup Report: Everything is setup!'
+    #     print 'Refreshing channels...'
+    # except:
+    #     print 'Setup Report: Failed to setup!'
+
+    # for channel in bot.voting_channels:
+    #     kwargs['channel'] = channel
+    #     do_initiate(bot, msg, **kwargs)
+    bot.refresh()
+
+    return True
 
 
 def do_admins(bot, msg, **kwargs):

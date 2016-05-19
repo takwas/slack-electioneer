@@ -40,7 +40,7 @@ config = conf.config_modes.get(config_mode)
 # Get slack bot token from envvar
 token = config.TOKEN
 if token is None:
-    print 'Environment variable: `SLACK_TOKEN` not found!'
+    print 'Environment variable: `VOTEBOT_TOKEN` not found!'
     print 'Terminating...'
     sys.exit(1)
 

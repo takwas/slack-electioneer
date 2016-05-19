@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, create_engine
+from sqlalchemy import Column, ForeignKey, Integer, String, Boolean, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
  
@@ -24,6 +24,8 @@ class Office(Base):
     purpose = Column(String, nullable=True, default='')
     log_ts = Column(String, nullable=True, default='')
     live_ts = Column(String, nullable=True, default='')
+    election_status_ts = Column(String, nullable=True, default='')
+    election_status = Column(Boolean, nullable=True, default=False)
 
 
 class Candidacy(Base):

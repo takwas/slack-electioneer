@@ -10,7 +10,7 @@
     :license: see LICENSE for details.
 """
 # standard library imports
-import os, sys, glob, time
+import os, sys#, glob, time
 
 # local imports
 from votebot import create_votebot, config as conf
@@ -26,36 +26,36 @@ config = conf.config_modes.get(config_mode)
 # Get slack bot token from envvar
 token = config.TOKEN
 if token is None:
-    print 'Environment variable: `SLACK_TOKEN` not found!'
+    print 'Environment variable: `VOTEBOT_TOKEN` not found!'
     print 'Terminating...'
     sys.exit(1)
 
 admin_token = config.ADMIN_TOKEN
 if admin_token is None:
-    print 'Admin token not provided, bot will not perform delete operations.'
+    print "Admin token not provided. Bot will not perform 'delete' operations."
 
 
 if __name__ == '__main__':
     print 'Votebot running...'
     
-    args = sys.argv
+    #args = sys.argv
     votebot = create_votebot(config)
 
     # Do we need to setup DB for first time use?
-    db_filename = config.DATABASE_URL[config.DATABASE_URL.rfind('/')+1:]
-    if len(args) > 1 and args[1] == 'setup' or not os.path.exists(db_filename):
-        # Backup old log files
-        for f in glob.glob('log*txt'):
-            try:
-                os.rename(f, 'backup_logs/{}_{}.txt'.format(f.replace('.txt', ''), '_'.join(time.ctime().replace(':', ' ').split())))
-            except OSError:
-                os.mkdir('backup_logs')
-                os.rename(f, 'backup_logs/{}_{}.txt'.format(f.replace('.txt', ''), '_'.join(time.ctime().replace(':', ' ').split())))
+    # db_filename = config.DATABASE_URL[config.DATABASE_URL.rfind('/')+1:]
+    # if len(args) > 1 and args[1] == 'setup' or not os.path.exists(db_filename):
+    #     # Backup old log files
+    #     for f in glob.glob('log*txt'):
+    #         try:
+    #             os.rename(f, 'backup_logs/{}_{}.txt'.format(f.replace('.txt', ''), '_'.join(time.ctime().replace(':', ' ').split())))
+    #         except OSError:
+    #             os.mkdir('backup_logs')
+    #             os.rename(f, 'backup_logs/{}_{}.txt'.format(f.replace('.txt', ''), '_'.join(time.ctime().replace(':', ' ').split())))
 
-        votebot.setup_db()
-        votebot.load_data()
-    else:
-        votebot.load_data()
+    #     votebot.setup_db()
+    #     votebot.load_data()
+    #else:
+    votebot.load_data()
 
     # Connect to RTM API and begin listening for events
     votebot.listen()

@@ -65,6 +65,8 @@ class DevConfig(Config):
             'purpose': 'Test bots as you develop them.',
             'live_ts': '',
             'log_ts': '',
+            'election_status_ts': '',
+            'election_status': False,
             'candidates': {}
         }
     }
@@ -89,6 +91,8 @@ class TestConfig(Config):
             'purpose': 'Pre-election testing.',
             'live_ts': '',
             'log_ts': '',
+            'election_status_ts': '',
+            'election_status': False,
             'candidates': {
                 'U0NAKE0TT' :  {
                     'post_ts' : '',
@@ -110,6 +114,8 @@ class TestConfig(Config):
             'purpose': 'Pre-election testing.',
             'live_ts': '',
             'log_ts': '',
+            'election_status_ts': '',
+            'election_status': False,
             'candidates': {
                 'U0NAKE0TT' :  {
                     'post_ts' : '',
@@ -145,6 +151,8 @@ class DeployConfig(Config):
             'purpose': 'Conduct chairperson election.',
             'live_ts': '',
             'log_ts': '',
+            'election_status_ts': '',
+            'election_status': False,
             'candidates': {
                 'U0UEMDE04' :  {
                     'post_ts' : '',
@@ -166,6 +174,8 @@ class DeployConfig(Config):
             'purpose': 'Conduct secretary election.',
             'live_ts': '',
             'log_ts': '',
+            'election_status_ts': '',
+            'election_status': False,
             'candidates': {
                 'U0U39CR8Q' :  {
                     'post_ts' : '',
@@ -195,6 +205,8 @@ class DeployConfig(Config):
             'purpose': 'Conduct treasurer election.',
             'live_ts': '',
             'log_ts': '',
+            'election_status_ts': '',
+            'election_status': False,
             'candidates': {
                 'U0U39CR8Q' :  {
                     'post_ts' : '',
