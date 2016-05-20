@@ -84,8 +84,11 @@ cmds = {
                                 U1:\t:clear
                                     Clear all messages in this channel.
 
-                                U2:\t:clear <name1>[, <name2>...]
-                                    Clear all messages from names in list of names in this channel.
+                                U2:\t:clear <username1>[, <username2>...]
+                                    Clear all messages from usernames in list of usernames in this channel.
+
+                                U3:\t:clear log
+                                    Clear all log messages from bot in this channel.
                             """
                             )
                             ),
@@ -115,7 +118,7 @@ cmds = {
                             >>> *Usage:*
 
                                 U1:\t:session-start
-                                    session-start elections.
+                                    Start elections.
                             """
                             )
                             ),
@@ -146,7 +149,7 @@ cmds = {
 
                                 U1:\t:say
                                     Show help for this command.
-                                U2:\t:say :chan=<channel> <msg>
+                                U2:\t:say chan=<channel> <msg>
                                     Make the bot say <msg> in <channel>.
                             """
                             )

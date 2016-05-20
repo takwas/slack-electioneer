@@ -610,11 +610,16 @@ class VoteBot(SlackClient):
         )
         return json.loads(response.text)
 
-    # Clear all messges in channel
-    def clear_channel(self, channel_name_or_id, userid=None, clean=True):
+    # Clear messges in channel
+    def clear_channel(self, channel_name_or_id, userid=None, clean=True, log=False):
         messages = self.get_messages(channel_name_or_id)
         
-        if userid is None and clean: # delete all messages
+        if log:
+            for message in messages:
+                text = message.get('text').strip()
+                if text.startswith('`') and text.endswith('`'):
+                    self.delete_msg(channel_name_or_id, msg_ts=message.get('ts'))
+        elif userid is None and clean: # delete all messages
             for message in messages:
                 self.delete_msg(channel_name_or_id, msg_ts=message.get('ts'))
         elif userid is not None: # delete all userid's messages

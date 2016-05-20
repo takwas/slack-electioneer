@@ -148,8 +148,13 @@ def do_clear(bot, msg, **kwargs):
     channel = kwargs.get('event').get('channel')
     # Clear channel
     msg = msg.split()
-    if len(msg) > 1:
-        for name in msg[1:]:
+    if msg[0] == 'log':
+        bot.clear_channel(
+            channel_name_or_id=channel,
+            log=True
+        )
+    elif len(msg) >= 1:
+        for name in msg:
             bot.clear_channel(
                 channel_name_or_id=channel,
                 userid=bot.parse_user_mention(name)
@@ -393,6 +398,7 @@ def do_session_stop(bot, msg, **kwargs):
                 text=textwrap.dedent(
                     '''
                     Hello {user},
+                    
                     Elections for *{office}* have just been concluded. These are the results:
                     
                     {stats}
