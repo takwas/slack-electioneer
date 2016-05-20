@@ -19,6 +19,7 @@ class Office(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False, unique=True)
+    channel_name = Column(String, nullable=True, default='')
     channel = Column(String(12), nullable=False, unique=True)
     topic = Column(String(12), nullable=True, default='')
     purpose = Column(String, nullable=True, default='')

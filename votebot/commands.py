@@ -82,7 +82,10 @@ cmds = {
                             >>> *Usage:*
 
                                 U1:\t:clear
-                                    Clear messages in this channel.
+                                    Clear all messages in this channel.
+
+                                U2:\t:clear <name1>[, <name2>...]
+                                    Clear all messages from names in list of names in this channel.
                             """
                             )
                             ),
@@ -136,14 +139,14 @@ cmds = {
                             """
                             )
                             ),
-    'ctrl' : Command(cmd='ctrl', callback=actions.do_override,
+    'say' : Command(cmd='say', callback=actions.do_say,
                         help_text=textwrap.dedent(
                             """
                             >>> *Usage:*
 
-                                U1:\t:ctrl
+                                U1:\t:say
                                     Show help for this command.
-                                U2:\t:ctrl :chan=<channel> <msg>
+                                U2:\t:say :chan=<channel> <msg>
                                     Make the bot say <msg> in <channel>.
                             """
                             )

@@ -10,7 +10,7 @@
     :license: see LICENSE for details.
 """
 # standard library imports
-import os, sys#, glob, time
+import os, sys, glob, time
 
 # local imports
 from votebot import create_votebot, config as conf
@@ -34,27 +34,24 @@ admin_token = config.ADMIN_TOKEN
 if admin_token is None:
     print "Admin token not provided. Bot will not perform 'delete' operations."
 
-
 if __name__ == '__main__':
     print 'Votebot running...'
     
-    #args = sys.argv
+    args = sys.argv
     votebot = create_votebot(config)
 
     # Do we need to setup DB for first time use?
-    # db_filename = config.DATABASE_URL[config.DATABASE_URL.rfind('/')+1:]
-    # if len(args) > 1 and args[1] == 'setup' or not os.path.exists(db_filename):
-    #     # Backup old log files
-    #     for f in glob.glob('log*txt'):
-    #         try:
-    #             os.rename(f, 'backup_logs/{}_{}.txt'.format(f.replace('.txt', ''), '_'.join(time.ctime().replace(':', ' ').split())))
-    #         except OSError:
-    #             os.mkdir('backup_logs')
-    #             os.rename(f, 'backup_logs/{}_{}.txt'.format(f.replace('.txt', ''), '_'.join(time.ctime().replace(':', ' ').split())))
-
-    #     votebot.setup_db()
-    #     votebot.load_data()
-    #else:
+    db_filename = config.DATABASE_URL[config.DATABASE_URL.rfind('/')+1:]
+    if len(args) > 1 and args[1] == 'setup' or not os.path.exists(db_filename):
+        # Backup old log files
+        for f in glob.glob('log*txt'):
+            try:
+                os.rename(f, 'backup_logs/{}_{}.txt'.format(f.replace('.txt', ''), '_'.join(time.ctime().replace(':', ' ').split())))
+            except OSError:
+                os.mkdir('backup_logs')
+                os.rename(f, 'backup_logs/{}_{}.txt'.format(f.replace('.txt', ''), '_'.join(time.ctime().replace(':', ' ').split())))
+        votebot.refresh()
+    
     votebot.load_data()
 
     # Connect to RTM API and begin listening for events

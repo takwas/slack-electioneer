@@ -36,6 +36,7 @@ class Config:
         'aishab': 'U0NE07PMJ',
         'acetakwas': 'U0NAKE0TT'
     }
+    TEST_USERS = {'acetakwas': 'U0NAKE0TT', 'ichux': 'U0NAZ4CRL'}
     VOTE_SYMBOL = 'white_check_mark'
     SOURCE_URL = 'https://github.com/takwas/votebot'
     ABOUT = textwrap.dedent(
@@ -60,6 +61,7 @@ class DevConfig(Config):
     BOT_NAME = 'sawkat'
     STATS = {
         'C179BGHMY': {
+            'channel_name': '',
             'office': 'test',
             'topic': 'Bot-Dev Testing Channel',
             'purpose': 'Test bots as you develop them.',
@@ -86,6 +88,7 @@ class TestConfig(Config):
     STATS = {
         #'C195MMLKU': {
         'C19RDTTSQ': {
+            'channel_name': '',
             'office': 'Test Office',
             'topic': 'Vote System Testing Channel',
             'purpose': 'Pre-election testing.',
@@ -109,6 +112,7 @@ class TestConfig(Config):
             }
         },
         'C195MMLKU': {
+            'channel_name': '',
             'office': 'Test Office 2',
             'topic': 'Vote System Testing Channel',
             'purpose': 'Pre-election testing.',
@@ -146,6 +150,7 @@ class DeployConfig(Config):
     BOT_NAME = 'votebot'  # The nick of the bot.
     STATS = {
         'C17JQ5RRT': {
+            'channel_name': '',
             'office': 'Chairperson',
             'topic': 'Chairperson Voting Channel',
             'purpose': 'Conduct chairperson election.',
@@ -169,6 +174,7 @@ class DeployConfig(Config):
             }
         },
         'C17H9HHU3': {
+            'channel_name': '',
             'office': 'Secretary',
             'topic': 'Secretary Voting Channel',
             'purpose': 'Conduct secretary election.',
@@ -200,6 +206,7 @@ class DeployConfig(Config):
             }
         },
         'C17JQQH0F': {
+            'channel_name': '',
             'office': 'Treasurer',
             'topic': 'Treasurer Voting Channel',
             'purpose': 'Conduct treasurer election.',

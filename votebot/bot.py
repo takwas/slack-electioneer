@@ -102,6 +102,7 @@ class VoteBot(SlackClient):
         self.stats = dict()
         for office in self.db.session.query(self.db.Office).all():
             self.stats[office.channel] = {
+                'channel_name': office.channel_name,
                 'office' : office.name,
                 'topic' : office.topic,
                 'purpose' : office.purpose,
@@ -150,6 +151,7 @@ class VoteBot(SlackClient):
             for key, value in self.stats.iteritems():
                 self.db.session.add(
                     self.db.Office(
+                            channel_name=value.get('channel_name'),
                             name=value.get('office'),
                             channel=key,
                             topic=value.get('topic'),
@@ -239,6 +241,7 @@ class VoteBot(SlackClient):
                     channel_name = '#' + channel_info.get(\
                         'channel', {}).get('name')
                 if channel_name is not None:
+                    self.stats.get(channel)['channel_name'] = channel_name
                     print 'Joined channel: {}'.format(channel_name) #DEBUG
             except:
                 print 'Error joining channel: {}'.format(channel) #DEBUG
@@ -268,7 +271,7 @@ class VoteBot(SlackClient):
                                 self.current_channel = event.get('channel')
                                 self.parser.parse_msg(msg=event.get('text'), event=event)
                             else:
-                                if event.get('user') != self.userid:
+                                if event.get('user') != self.userid and self.stats.get(event.get('channel')).get('election_status'):
                                     self.delete_msg(event.get('channel'), event.get('ts'))
 
                     elif event.get('type') == 'reaction_added' and event.get('item').get('channel') in self.voting_channels and self.stats.get(event.get('item').get('channel')).get('election_status'):
@@ -476,25 +479,7 @@ class VoteBot(SlackClient):
                 break
         return userid
 
-    # MARK
-    def get_userbio(self, userid):
-        bio = textwrap.dedent(
-            '''
-            Candidate: {mention}
-            > For: {office}
-            > Name: *{real_name} *
-            > Title: _{title} _
-            
-            (_Vote by clicking on the green white checkmark below_)
-            '''.format(
-                mention=self.format_user_mention(userid),
-                real_name=user['profile']['real_name'],
-                title=user['profile']['title']
-            )
-        )
-        return bio
-
-    # MARK    
+    # Make's an API call to retrieve a SLack team member's profile info
     def get_user(self, userid):
         response = self.api_call('users.info', user=userid)
         return response.get('user')
@@ -584,9 +569,10 @@ class VoteBot(SlackClient):
                     > 
                     '''
                 )
-                for candidate_profile in candidates_profiles:
-                    user_mention = candidate_profile.get('text').strip().split('\n')[0].split()[1].strip()
-                    userid = self.parse_user_mention(user_mention)
+                for candidate_userid in self.stats.get(channel_name_or_id).get('candidates').keys():
+                    # user_mention = candidate_profile.get('text').strip().split('\n')[0].split()[1].strip()
+                    # userid = self.parse_user_mention(user_mention)
+                    userid = candidate_userid
                     profile = self.db.session.query(self.db.Profile).filter_by(userid=userid).first()
                     candidacies = profile.candidacies
                     for candidacy in candidacies:
@@ -595,7 +581,7 @@ class VoteBot(SlackClient):
                     self.stats[channel_name_or_id]['candidates'][userid]['votes_count'] = votes_count
 
                     stat_report += ' {mention}: `{count}` | '.format(
-                        mention=user_mention,
+                        mention=self.format_user_mention(userid),
                         count=votes_count
                     )
         return stat_report
@@ -625,13 +611,21 @@ class VoteBot(SlackClient):
         return json.loads(response.text)
 
     # Clear all messges in channel
-    def clear_channel(self, channel_name_or_id, clean=True):
+    def clear_channel(self, channel_name_or_id, userid=None, clean=True):
         messages = self.get_messages(channel_name_or_id)
-        for message in messages:            
-            if not clean:
+        
+        if userid is None and clean: # delete all messages
+            for message in messages:
+                self.delete_msg(channel_name_or_id, msg_ts=message.get('ts'))
+        elif userid is not None: # delete all userid's messages
+            for message in messages:
+                if message.get('user')==userid:
+                    self.delete_msg(channel_name_or_id, msg_ts=message.get('ts'))                    
+        elif not clean: # delete all but bot's messages
+            for message in messages:
                 if message.get('user')==self.userid:
                     continue
-            self.delete_msg(channel_name_or_id, msg_ts=message.get('ts'))
+                self.delete_msg(channel_name_or_id, msg_ts=message.get('ts'))
 
     # Set/change the topic of channel with `channel_name_or_id`
     def set_channel_topic(self, text, channel_name_or_id):
@@ -650,3 +644,20 @@ class VoteBot(SlackClient):
             'channels.invite',
             dict(channel=channel_name_or_id, user=userid)
         )
+
+    def direct_message(self, text, userid):
+        try:
+            channel = self.api_call(
+                'im.open',
+                user=userid
+            ).get('channel').get('id')
+        except:
+            channel = None
+
+        if channel is not None:
+            return self.post_msg(
+                text=text,
+                channel_name_or_id=channel
+            )
+        else:
+            return False

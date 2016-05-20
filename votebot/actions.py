@@ -99,7 +99,7 @@ def do_help(bot, msg=None, **kwargs):
             """
             from commands import cmds
 
-            return ':' + ', :'.join(sorted(cmds.keys()))
+            return '`:' + '`, `:'.join(sorted(cmds.keys()))+'`'
 
         return bot.post_msg(
             text=textwrap.dedent(
@@ -110,9 +110,9 @@ def do_help(bot, msg=None, **kwargs):
                     {cmds}
 
                 For help on a command, type:
-                    :help [command]
+                    `:help [command]`
 
-                E.g :help about
+                E.g `:help about`
                 """.format(cmds=format_cmds())
             ),
             channel_name_or_id=channel
@@ -147,7 +147,19 @@ def do_about(bot, msg, **kwargs):
 def do_clear(bot, msg, **kwargs):
     channel = kwargs.get('event').get('channel')
     # Clear channel
-    bot.clear_channel(channel)
+    msg = msg.split()
+    if len(msg) > 1:
+        for name in msg[1:]:
+            bot.clear_channel(
+                channel_name_or_id=channel,
+                userid=bot.parse_user_mention(name)
+            )
+    else:
+        bot.clear_channel(
+            channel_name_or_id=channel,
+            clean=True
+        )
+    #bot.clear_channel(channel)
     return True    
 
 def do_initiate(bot, msg, **kwargs):
@@ -234,14 +246,81 @@ def do_initiate(bot, msg, **kwargs):
 
 def do_session_start(bot, msg, **kwargs):
     """
-    Start an election session
+    Start election session...
     """
     channel = kwargs.get('event').get('channel')
     bot.stats.get(channel)['election_status'] = True
     bot.db.session.query(bot.db.Office).filter_by(channel=channel).first().election_status= True
     bot.db.session.commit()
     bot.update_election_status(channel, True)
+    bot.post_msg(
+        text='`Election session started.`',
+        channel_name_or_id=bot.current_channel
+    )
+    bot.post_msg(
+        text='`Alerting team members...`',
+        channel_name_or_id=bot.current_channel
+    )
+    if 'DEBUG' in dir(bot.config) or 'TESTING' in dir(bot.config):
+        for test_userid in bot.config.TEST_USERS.values():
+        #test_userid = bot.config.TEST_USERS.values()[0]
+            bot.direct_message(
+                text=textwrap.dedent(
+                    '''
+                    :bellhop_bell: *ALERT!* :bell:
+                    
+                    Hello {user},
+                    
+                    I would like to inform you that elections have commenced in the <#{channel_id}|{channel_name}> channel. You may go and cast your vote now.
 
+                    The following are the candidates for the office of *{office}*:
+                    > {candidates}
+
+                    Choose wisely! :+1:
+                    '''.format(
+                        user=bot.format_user_mention(test_userid),
+                        channel_id=channel,
+                        channel_name=bot.stats.get(channel).get('channel_name'),
+                        office=bot.stats.get(channel).get('office'),
+                        candidates=', '.join(
+                            [bot.format_user_mention(x) for x in bot.stats.get(channel).get('candidates').keys()]
+                        )
+                    )
+                ),
+                userid=test_userid
+            )
+    else:
+        for member in bot.team_members:
+            bot.direct_message(
+                text=textwrap.dedent(
+                    '''
+                    :bellhop_bell: *ALERT!* :bell:
+                
+                    Hello {user},
+                    
+                    I would like to inform you that elections have commenced in the <#{channel_id}|{channel_name}> channel. You may go and cast your vote now.
+
+                    The following are the candidates for the office of *{office}*:
+                    > {candidates}
+
+                    Choose wisely! :+1:
+                    '''.format(
+                        user=bot.format_user_mention(member.get('id')),
+                        channel_id=channel,
+                        channel_name=bot.stats.get(channel).get('channel_name'),
+                        office=bot.stats.get(channel).get('office'),
+                        candidates=', '.join(
+                            [bot.format_user_mention(x) for x in bot.stats.get(channel).get('candidates').keys()]
+                        )
+                    )
+                ),
+                userid=member.get('id')
+            )
+
+    bot.post_msg(
+        text='`Done.`',
+        channel_name_or_id=bot.current_channel
+    )
     return True
 
 
@@ -250,11 +329,86 @@ def do_session_stop(bot, msg, **kwargs):
     End an election session
     """
     channel = kwargs.get('event').get('channel')
+    bot.post_msg(
+        text='`Closing election session...',
+        channel_name_or_id=bot.current_channel
+    )
     bot.stats.get(channel)['election_status'] = False
     bot.db.session.query(bot.db.Office).filter_by(channel=channel).first().election_status= False
     bot.db.session.commit()
     bot.update_election_status(channel, False)
+    bot.post_msg(
+        text='`Election session closed.`',
+        channel_name_or_id=bot.current_channel
+    )
+    bot.post_msg(
+        text='`Reporting to team members...`',
+        channel_name_or_id=bot.current_channel
+    )
 
+    members_who_voted = [vote.voter.userid for vote in bot.db.session.query(bot.db.Vote).all()]
+    print 'Voters: %r' %members_who_voted
+    if 'DEBUG' in dir(bot.config) or 'TESTING' in dir(bot.config):
+        for test_userid in bot.config.TEST_USERS.values():
+        #test_userid = bot.config.TEST_USERS.values()[0]
+            if test_userid in members_who_voted:
+                voted_msg = 'Thank you for your participation in the process. Looking forward to more contributions from you in the community.'
+            else:
+                voted_msg = 'You did not participate in this one, but the community would be glad to have your contribution the next time. :simple_smile:'
+
+            bot.direct_message(
+                text=textwrap.dedent(
+                    '''
+                    Hello {user},
+                    Elections for *{office}* have just been concluded. These are the results:
+                    {stats}
+
+                    Any reviews would be communicated by the team administrators.
+
+                    {voted_msg}
+
+                    You may now head over to the <#C0NA61U1X|general> channel to talk about this with the rest of the community.
+                    '''.format(
+                        user=bot.format_user_mention(test_userid),
+                        office=bot.stats.get(channel).get('office'),
+                        stats=bot.get_stats(channel),
+                        voted_msg=voted_msg
+                    )
+                ),
+                userid=test_userid
+            )
+    else:
+        for member in bot.team_members:
+            if member.get('id') in members_who_voted:
+                voted_msg = 'Thank you for your participation in the process. Looking forward to more contributions from you in the community.'
+            else:
+                voted_msg = 'You did not participate in this one, but the community would be glad to have your contribution the next time. :simple_smile:'
+
+            bot.direct_message(
+                text=textwrap.dedent(
+                    '''
+                    Hello {user},
+                    Elections for *{office}* have just been concluded. These are the results:
+                    {stats}
+
+                    Any reviews would be communicated by the team administrators.
+
+                   {voted_msg}
+
+                    You may now head over to the <#C0NA61U1X|general> channel to talk about this with the rest of the community.
+                    '''.format(
+                        user=member.get('profile').get('first_name') or bot.format_user_mention(member.get('id')),
+                        office=bot.stats.get(channel).get('office'),
+                        stats=bot.get_stats(channel).split('\n',1)[1:],
+                        voted_msg=voted_msg
+                    )
+                ),
+                userid=member.get('id')
+            )
+    bot.post_msg(
+        text='`Done.`',
+        channel_name_or_id=bot.current_channel
+    )
     return True
 
 
@@ -264,24 +418,6 @@ def do_setup(bot, msg, **kwargs):
     """
     #channel = kwargs.get('event').get('channel')
 
-    # Backup old log files
-    # try:
-    #     for f in glob.glob('../log*txt'):
-    #         try:
-    #             os.rename(f, '../backup_logs/{}_{}.txt'.format(f.replace('.txt', ''), '_'.join(time.ctime().replace(':', ' ').split())))
-    #         except OSError:
-    #             os.mkdir('../backup_logs')
-    #             os.rename(f, '../backup_logs/{}_{}.txt'.format(f.replace('.txt', ''), '_'.join(time.ctime().replace(':', ' ').split())))
-    #     bot.setup_db()
-    #     bot.load_data()
-    #     print 'Setup Report: Everything is setup!'
-    #     print 'Refreshing channels...'
-    # except:
-    #     print 'Setup Report: Failed to setup!'
-
-    # for channel in bot.voting_channels:
-    #     kwargs['channel'] = channel
-    #     do_initiate(bot, msg, **kwargs)
     bot.refresh()
 
     return True
@@ -303,7 +439,7 @@ def do_admins(bot, msg, **kwargs):
     return True
 
 
-def do_override(bot, msg, **kwargs):
+def do_say(bot, msg, **kwargs):
     """
     The text in `msg` will be rebroadcasted by the bot receiving this
     message in the specified channel.
@@ -312,7 +448,7 @@ def do_override(bot, msg, **kwargs):
     """
     # Show help message if command was entered without args
     if msg is None or msg == '' or msg == ' ':
-        return do_help(bot=bot, msg='ctrl', **kwargs)
+        return do_help(bot=bot, msg='say', **kwargs)
 
     # Get the name of the channel to post `msg` to
     channel, msg = parse_channel_name(msg)
@@ -326,24 +462,6 @@ def do_override(bot, msg, **kwargs):
             channel_name_or_id=channel
         )
     return True
-
-
-# def do_submit(bot, msg, **kwargs):
-#     """
-#     This will enable a user provide a message that will be saved by the
-#     receiving bot, for use by the developers.
-
-#     For example a message mentioning a bug, or some other feedback.
-#     """
-#     # Show help message if command was entered without args
-#     if msg is None or msg == '' or msg == ' ':
-#         return do_help(bot=bot, msg='submit')
-
-#     # IMPLEMENT SAVE msg
-#     response = Response("Thank you. I have received your submission.".format(
-#                         filename="some_filename"))
-#     return response
-
 
 
 # Helper functions
