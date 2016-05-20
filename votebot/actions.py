@@ -211,7 +211,10 @@ def do_initiate(bot, msg, **kwargs):
     # Set channel purpose
     bot.set_channel_purpose(bot.stats.get(channel).get('purpose'), channel)
     # Pin message to channel
-    print bot.pin_msg_to_channel(channel, instruction_response.get('ts'))
+    bot.pin_msg_to_channel(channel, instruction_response.get('ts'))
+
+    help_response = do_help(bot, **kwargs)
+    bot.pin_msg_to_channel(channel, help_response.get('ts'))
 
     # Add candidates for this office
     for userid, data in bot.stats.get(channel).get('candidates').iteritems():
@@ -362,7 +365,8 @@ def do_session_stop(bot, msg, **kwargs):
                     Hello {user},
 
                     Elections for *{office}* have just been concluded. These are the results:
-                    > {stats}
+                    
+                    {stats}
 
                     Any reviews would be communicated by the team administrators.
 
@@ -372,7 +376,7 @@ def do_session_stop(bot, msg, **kwargs):
                     '''.format(
                         user=bot.format_user_mention(test_userid),
                         office=bot.stats.get(channel).get('office'),
-                        stats=bot.get_stats(channel).strip().split('\n',1)[1],
+                        stats=bot.get_stats(channel).strip().split('\n',1)[1].strip(),
                         voted_msg=voted_msg
                     )
                 ),
@@ -390,6 +394,7 @@ def do_session_stop(bot, msg, **kwargs):
                     '''
                     Hello {user},
                     Elections for *{office}* have just been concluded. These are the results:
+                    
                     {stats}
 
                     Any reviews would be communicated by the team administrators.
@@ -400,7 +405,7 @@ def do_session_stop(bot, msg, **kwargs):
                     '''.format(
                         user=member.get('profile').get('first_name') or bot.format_user_mention(member.get('id')),
                         office=bot.stats.get(channel).get('office'),
-                        stats=bot.get_stats(channel).strip().split('\n',1)[1],
+                        stats=bot.get_stats(channel).strip().split('\n',1)[1].strip(),
                         voted_msg=voted_msg
                     )
                 ),
