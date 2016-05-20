@@ -566,7 +566,7 @@ class VoteBot(SlackClient):
                 stat_report = textwrap.dedent(
                     '''
                     *Live Stats*
-                    > 
+                    
                     '''
                 )
                 for candidate_userid in self.stats.get(channel_name_or_id).get('candidates').keys():
