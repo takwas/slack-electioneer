@@ -36,7 +36,7 @@ class Config:
         'aishab': 'U0NE07PMJ',
         'acetakwas': 'U0NAKE0TT'
     }
-    TEST_USERS = {'acetakwas': 'U0NAKE0TT', 'ichux': 'U0NAZ4CRL'}
+    TEST_USERS = {'acetakwas': 'U0NAKE0TT'}
     VOTE_SYMBOL = 'white_check_mark'
     SOURCE_URL = 'https://github.com/takwas/votebot'
     ABOUT = textwrap.dedent(

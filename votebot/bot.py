@@ -314,7 +314,7 @@ class VoteBot(SlackClient):
                                 ),
                                 channel=event.get('channel')
                             )
-                    elif event.get('type') == 'reaction_removed' and self.stats.get(event.get('item').get('channel')).get('election_status'):
+                    elif event.get('type') == 'reaction_removed' and event.get('item').get('channel') in self.voting_channels and self.stats.get(event.get('item').get('channel')).get('election_status'):
                         self.log_msg(
                             text=textwrap.dedent(
                                 '''
