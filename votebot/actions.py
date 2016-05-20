@@ -353,8 +353,7 @@ def parse_channel_name(msg):
     import utils
 
     channel_name_start = msg.find('=')+1
-    channel_name_end = msg.find(' ', channel_name_start)
-    channel = msg[channel_name_start:channel_name_end]
+    substr = msg[channel_name_start:].strip()
+    channel, msg = substr.split(' ', 1)
     channel = utils.verify_channel(channel)
-    msg = msg[channel_name_end:].strip()
     return channel, msg
